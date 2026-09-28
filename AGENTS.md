@@ -64,7 +64,16 @@ Geçerli istemci anahtarları: `claude-code`, `claude-desktop`, `antigravity`,
 görünenlere yazar.
 
 Kullanıcı "hiçbir şeyi değiştirmesin, sadece okusun" diyorsa
-`--salt-okunur` ekle; veri değiştiren araçlar tamamen yüklenmez.
+`--salt-okunur` ekle (bayrak ayar dosyasına da yazılır):
+
+```bash
+npx -y magaza-mcp kaydet --magazalar appstore,play --salt-okunur
+```
+
+Bu modda yazma yapan araçlar (`appstore__yorum_yanitla`,
+`appstore__metin_guncelle`, `play__yorum_yanitla`) listeye hiç girmez; 27 araç
+24'e düşer. `magaza__cagir` listede kalır — katalogdaki okuma uçlarına da o
+araçtan gidiliyor — ama veri değiştiren bir operasyon istendiğinde reddeder.
 
 Komut mevcut ayarlara dokunmaz: yalnızca `magaza-mcp` girdisini ekler veya
 günceller, her yazmadan önce `.magaza-mcp-yedek` kopyası alır ve yazmayı
@@ -107,8 +116,9 @@ Sık karşılaşılan iki çıktı:
 - **App Store: anahtar reddedildi** → Key ID, Issuer ID ve `.p8` birbirine ait
   değil, ya da anahtar iptal edilmiş. Sistem saati de kaymış olabilir; imzalı
   token'ın ömrü 20 dakika.
-- **Play: Reporting API kapalı** → Anahtar geçerli, sadece Cloud projesinde o
-  API açılmamış. `play__uygulamalar` ve `play__cokme_orani` bundan etkilenir,
+- **Play: "anahtar geçerli, ancak Play Developer Reporting API Cloud
+  projesinde kapalı"** → Anahtar geçerli, sadece Cloud projesinde o API
+  açılmamış. `play__uygulamalar` ve `play__cokme_orani` bundan etkilenir,
   diğer Play araçları çalışmaya devam eder.
 
 ---
@@ -119,12 +129,16 @@ Sık karşılaşılan iki çıktı:
 
 İki mağaza da açıkken 27 araç yüklenir: 11 tane `appstore__`, 10 tane `play__`,
 3 tane iki mağazayı birden sorgulayan `magaza__`, 3 tane de aşağıdaki erişim
-aracı. Araç tanımlarının tamamı bağlamda yaklaşık **3.500 token** yer kaplar.
+aracı. Tek mağazalı kurulumda çapraz araçlar hiç oluşmaz: yalnızca App Store'da
+14, yalnızca Play'de 13 araç yüklenir. Araç tanımlarının tamamı bağlamda
+yaklaşık **4.000 token** yer kaplar.
+
+Hangi araçların yüklü olduğunu `npx -y magaza-mcp araclar` ile görebilirsin.
 
 ### Yüklü olmayan her şeye de erişebilirsin
 
-Apple ve Google'ın API'lerinde toplam **1.281 operasyon** var. Bunların hepsini
-ayrı araç olarak sunmak yaklaşık 184.000 token tutardı — bu yüzden sunulmuyor.
+Apple ve Google'ın API'lerinde toplam **1.440 operasyon** var. Bunların hepsini
+ayrı araç olarak sunmak yaklaşık 210.000 token tutardı — bu yüzden sunulmuyor.
 Bunun yerine:
 
 ```
@@ -138,7 +152,9 @@ Bu üç araç sayesinde kapalı hiçbir özellik yok; kullanılmayanın maliyeti
 **Önemli:** Kullanıcı yüklü araçların kapsamadığı bir şey isterse "bu MCP
 bunu yapamıyor" deme — önce `magaza__endpoint_ara` ile ara. Aradığın şey
 büyük ihtimalle vardır. Arama Türkçe değil, API terimleriyle yapılır
-(`subscription`, `review`, `build`, `crash rate`).
+(`subscription`, `review`, `build`, `crash rate`). Özeti `[ESKİMİŞ]` ile
+başlayan operasyonlar Apple'ın artık önermediği uçlardır; güncel bir karşılığı
+varsa onu tercih et.
 
 ### Veri değiştirirken
 

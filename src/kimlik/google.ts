@@ -23,6 +23,16 @@ export type ServisHesabi = {
 
 let onbellek: { token: string; bitis: number } | null = null;
 
+/**
+ * Uçuştaki token isteği.
+ *
+ * İki araç aynı anda token isterse ikisi de bayat önbelleği görüp Google'a
+ * ayrı ayrı gider. İkisi de geçerli token alır, yani yanlış sonuç doğmaz —
+ * ama gereksiz istek ve hız sınırı riski doğar. Uçuştaki isteği paylaşarak
+ * ikinci çağrıyı aynı sonuca bağlıyoruz.
+ */
+let ucustaki: Promise<string> | null = null;
+
 function base64url(veri: Buffer | string): string {
   return Buffer.from(veri)
     .toString("base64")
@@ -70,6 +80,16 @@ function jwtUret(hesap: ServisHesabi): string {
 export async function gecerliToken(): Promise<string> {
   const simdi = Math.floor(Date.now() / 1000);
   if (onbellek && onbellek.bitis - 120 > simdi) return onbellek.token;
+  if (ucustaki) return ucustaki;
+
+  ucustaki = tokenIste().finally(() => {
+    ucustaki = null;
+  });
+  return ucustaki;
+}
+
+async function tokenIste(): Promise<string> {
+  const simdi = Math.floor(Date.now() / 1000);
 
   const hesap = servisHesabiOku();
   if (!hesap) {

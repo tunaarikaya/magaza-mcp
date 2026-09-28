@@ -4,7 +4,11 @@
 # yanlışlıkla repoya girmesini engellemek.
 #
 # Çalıştırmak için:
-#   gitleaks detect --config .gitleaks.toml --redact
+#   gitleaks detect --config .gitleaks.toml --redact           # git geçmişi
+#   gitleaks detect --no-git --config .gitleaks.toml --redact   # çalışma dizini
+#
+# İkincisi önemlidir: .gitignore anahtarları git'ten saklar, ama dosya diskte
+# durur. --no-git taraması onu da yakalar.
 
 title = "magaza-mcp sızıntı taraması"
 
@@ -20,6 +24,17 @@ id = "magaza-ozel-anahtar-blogu"
 description = "PEM özel anahtar bloğu (Apple .p8 dahil)"
 regex = '''-----BEGIN(?: [A-Z]+)? PRIVATE KEY-----'''
 tags = ["anahtar", "pem", "apple", "p8"]
+
+  # Kaynak kodda PEM başlığı bir metin olarak geçebilir: doğrulama regex'i,
+  # kullanıcıya gösterilen hata mesajı, README örneği... Bunlar sır değil.
+  # Ayırt edici işaret: gerçek bir anahtarda başlıktan hemen sonra satır sonu,
+  # tırnak ya da "\n" kaçışı gelir; açıklama metninde ise düz yazı devam eder.
+  [[rules.allowlists]]
+  description = "Kaynak koddaki PEM başlığı anlatımları (gerçek anahtar değil)"
+  condition = "AND"
+  paths = ['''^src/''', '''^README\.md$''', '''^AGENTS\.md$''']
+  regexTarget = "line"
+  regexes = ['''-----BEGIN(?: [A-Z ]+)? PRIVATE KEY----- [^"'`\\]''']
 
 [[rules]]
 id = "magaza-servis-hesabi-private-key"
@@ -42,11 +57,12 @@ tags = ["kimlik", "google", "servis-hesabi"]
 # token'a benzeyen örnek dizgiler, örnek kimlikler ve uzun base64 parçaları
 # geçebilir. Bunlar sır değildir, taramadan çıkarılırlar.
 
-[allowlist]
-description = "Üretilmiş ve kamuya açık spec dosyaları"
+[[allowlists]]
+description = "Üretilmiş ve kamuya açık spec dosyaları, derleme çıktısı, kilit dosyası"
 paths = [
   '''^spec/''',
   '''^src/katalog/''',
   '''^dist/''',
+  '''^node_modules/''',
   '''^package-lock\.json$''',
 ]

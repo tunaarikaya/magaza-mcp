@@ -78,6 +78,14 @@ export function yaz(anahtar: string, deger: string): void {
 
   if (macOS) {
     try {
+      // Değer `-w` argümanı olarak veriliyor. Bunun bilinen bir bedeli var:
+      // argümanlar çağrı süresince `ps` ile aynı makinedeki başka işlemlerce
+      // okunabilir. Alternatifi denendi ve İŞE YARAMIYOR: `-w`'yi değersiz
+      // bırakıp değeri stdin'den vermek, `security`'nin etkileşimli parola
+      // okuyucusunu devreye sokuyor ve o okuyucu girdiyi 128 karakterde
+      // sessizce kesiyor (ölçüldü: 300 karakter gönderildi, 128 saklandı).
+      // Bir .p8 anahtarının base64'ü bunun iki katından uzun; o yolla
+      // saklanan her anahtar bozuk kaydedilirdi.
       execFileSync(
         "security",
         ["add-generic-password", "-U", "-s", SERVIS, "-a", anahtar, "-w", saklanacak],

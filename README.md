@@ -10,7 +10,7 @@ App Store Connect ve Google Play'i tek MCP sunucusunda birleştirir; yapay zekâ
 
 ## Neden bu var?
 
-Piyasadaki MCP sunucularının hepsi tek mağazalı: ya sadece App Store Connect'e ya da sadece Google Play'e bağlanıyorlar. İkisini aynı anda kullanmak istiyorsan iki ayrı sunucu kuruyor, iki ayrı araç setiyle uğraşıyor ve iki mağazayı karşılaştıran her soruyu elle birleştiriyorsun.
+Piyasadaki MCP sunucularının neredeyse hepsi tek mağazalı: ya sadece App Store Connect'e ya da sadece Google Play'e bağlanıyorlar. İkisini aynı anda kullanmak istiyorsan iki ayrı sunucu kuruyor, iki ayrı araç setiyle uğraşıyor ve iki mağazayı karşılaştıran her soruyu elle birleştiriyorsun.
 
 Bildiğimiz kadarıyla `magaza-mcp`, iki mağazayı tek pakette birleştiren ilk proje. Bunun asıl kazancı araç listesinin uzaması değil: **iki mağazayı aynı anda sorgulayabilen araçlar ancak böyle mümkün oluyor.** "Aynı uygulamanın aboneliği App Store'da ve Play'de kaç para?" ya da "Kullanıcı ödedi ama premium göremiyor, sorun hangi mağazada?" gibi sorular, iki API'ye aynı çağrıda erişebilen bir sunucu olmadan cevaplanamaz.
 
@@ -24,8 +24,9 @@ Sihirbaz sırasıyla şunları sorar:
 
 1. **Hangi mağazaları bağlayalım?** — App Store Connect, Google Play veya ikisi.
 2. **App Store Connect anahtarı** — Key ID, Issuer ID ve `.p8` özel anahtar dosyanın yolu. Anahtarı App Store Connect → Kullanıcılar ve Erişim → Entegrasyonlar bölümünden oluşturursun. Sihirbaz anahtarı kaydetmeden önce Apple'a gerçek bir istek atıp doğrular; kaç uygulama gördüğünü söyler.
-3. **Google Play servis hesabı** — Google Cloud Console'dan indirdiğin servis hesabı JSON anahtarının yolu. Bu da kaydedilmeden önce Google'a karşı doğrulanır.
+3. **Google Play servis hesabı** — Google Cloud Console'dan indirdiğin servis hesabı JSON anahtarının yolu. Sihirbaz bunu da Google'a gerçek bir istek atarak doğrular ve kaç uygulama gördüğünü söyler. (Apple anahtarı doğrulama geçtikten sonra kasaya yazılır; Google anahtarı ise doğrulamanın kendisi erişim token'ı üretmeyi gerektirdiği için önce kasaya yazılıp hemen ardından denenir.)
 4. **Hangi uygulamalara kurulsun?** — Makinende kurulu görünen istemciler işaretli gelir, istediklerini seçersin.
+5. **Salt-okunur kurulsun mu?** — Varsayılan hayır. Evet dersen ayar dosyasına `--salt-okunur` bayrağı da yazılır.
 
 Desteklenen istemciler ve yazılan ayar dosyaları:
 
@@ -47,6 +48,7 @@ Kurulumdan sonra açık olan uygulamaları yeniden başlat.
 Diğer komutlar:
 
 ```bash
+npx magaza-mcp durum       # Neyin bağlı olduğunu göster (--json ile makine okunur)
 npx magaza-mcp araclar     # Yüklü araçları listele (✎ = veri değiştirebilir)
 npx magaza-mcp surum       # Sürümü yazdır
 npx magaza-mcp yardim      # Yardım
@@ -82,7 +84,7 @@ Hayır — ve bu tesadüf değil, tasarımın kendisi.
 
 **Araç isimleri önekle ayrılmıştır.** App Store Connect'e giden her araç `appstore__` ile, Google Play'e giden her araç `play__` ile başlar. Bir araç asla iki API'ye birden gitmez; `appstore__yorumlar` yalnızca Apple'ın `customerReviews` uç noktasını, `play__yorumlar` yalnızca Android Publisher'ın `reviews` uç noktasını çağırır. İsimlerin karışma ihtimali yok, çünkü ortak isim yok.
 
-**Seçmediğin mağazanın araçları hiç yüklenmez.** Kurulumda hangi mağazaları seçtiğin ayar dosyasındaki `MAGAZALAR` değişkenine yazılır. Sunucu açılışta bu değişkeni okur ve araç listesini ona göre kurar: sadece App Store seçtiysen hiçbir `play__` aracı belleğe bile alınmaz, modeline sunulan araç listesinde görünmez, token harcamaz. Tersi de geçerli. Yani tek paket kurarsın ama pratikte iki bağımsız sunucudan hangisini istiyorsan o çalışır.
+**Seçmediğin mağazanın araçları hiç yüklenmez.** Kurulumda hangi mağazaları seçtiğin ayar dosyasındaki `MAGAZALAR` değişkenine yazılır. Sunucu açılışta bu değişkeni okur ve araç listesini ona göre kurar: sadece App Store seçtiysen hiçbir `play__` aracı belleğe bile alınmaz, modeline sunulan araç listesinde görünmez, token harcamaz. Tersi de geçerli. Yani tek paket kurarsın ama pratikte iki bağımsız sunucudan hangisini istiyorsan o çalışır. Rakamla: iki mağaza açıkken 27, yalnızca App Store'da 14, yalnızca Play'de 13 araç yüklenir.
 
 **Çapraz araçlar yalnızca iki mağaza da açıkken var olur.** `magaza__` önekli çapraz araçlar (genel bakış, abonelik karşılaştırma, satın alma teşhisi) tek mağazalı kurulumda hiç oluşturulmaz — anlamları olmadığı için.
 
@@ -115,29 +117,29 @@ Araç adlarındaki önek hangi mağazaya gidildiğini söyler. ✎ işaretli ara
 | `appstore__uygulamalar` | Hesaptaki uygulamaları listeler: ad, bundle ID, SKU, birincil dil ve diğer araçların istediği `id`. |
 | `appstore__surumler` | Bir uygulamanın App Store sürümlerini ve durumlarını gösterir (hazırlanıyor, incelemede, yayında, reddedildi). |
 | `appstore__buildler` | TestFlight build'lerini, işlenme durumlarını ve son kullanma tarihlerini listeler. |
-| `appstore__yorumlar` | Müşteri yorumlarını getirir; puana ve ülkeye göre süzülebilir. |
-| `appstore__yorum_yanitla` ✎ | Bir yoruma geliştirici yanıtı yazar (Apple incelemesinden sonra yayınlanır). |
+| `appstore__yorumlar` | Müşteri yorumlarını en yeniden eskiye getirir; puana ve ülkeye göre süzülebilir, istersen yalnızca henüz yanıtlanmamışları verir. Varsa mevcut geliştirici yanıtını da gösterir. |
+| `appstore__yorum_yanitla` ✎ | Bir yoruma geliştirici yanıtı yazar (Apple incelemesinden sonra yayınlanır). `onayla=true` gelmeden yazmaz. |
 | `appstore__abonelikler` | Abonelik gruplarını ve içlerindeki abonelikleri listeler: ürün kimliği, süre, durum. |
 | `appstore__abonelik_fiyatlari` | Bir aboneliğin ülke ülke müşteri fiyatlarını ve geliştirici gelirini getirir. |
 | `appstore__iap_urunler` | Tek seferlik uygulama içi satın alma ürünlerini listeler. |
-| `appstore__testflight_gruplari` | TestFlight beta gruplarını, genel davet linklerini ve kotalarını gösterir. |
-| `appstore__metin_guncelle` ✎ | Hazırlanmakta olan sürümün mağaza metinlerini günceller: sürüm notları, açıklama, anahtar kelimeler, tanıtım metni. |
-| `appstore__satis_raporu` | Satış/indirme raporunu indirir (günlük, haftalık, aylık, yıllık; satış, abonelik, abonelik olayı, abone). |
+| `appstore__testflight_gruplari` | TestFlight beta gruplarını, her gruptaki test kullanıcı sayısını, genel davet linklerini ve kotalarını gösterir. |
+| `appstore__metin_guncelle` ✎ | Hazırlanmakta olan sürümün mağaza metinlerini günceller: sürüm notları, açıklama, anahtar kelimeler, tanıtım metni. `onayla=true` gelmeden yazmaz. |
+| `appstore__satis_raporu` | Satış/indirme raporunu TSV olarak indirir: günlük, haftalık, aylık veya yıllık; satış, ön sipariş, yükleme, abonelik, abonelik olayı, abone ve teklif kodu raporları. |
 
 ### Google Play (`play__`)
 
 | Araç | Ne yapar |
 | --- | --- |
 | `play__uygulamalar` | Servis hesabının eriştiği uygulamaları listeler; diğer araçların istediği paket adını buradan alırsın. |
-| `play__kanallar` | Yayın kanallarını (internal, alpha, beta, production) ve her kanaldaki sürümleri, kullanıcı yüzdeleriyle birlikte gösterir. |
+| `play__kanallar` | Yayın kanallarını (internal, alpha, beta, production) ve her kanaldaki sürümleri, kullanıcı yüzdeleriyle birlikte gösterir. Servis hesabının sürüm yönetme yetkisi gerekir. |
 | `play__yorumlar` | Kullanıcı yorumlarını getirir; istenirse çevirir. Play API'si yalnızca son ~1 haftayı verir. |
 | `play__yorum_yanitla` ✎ | Bir yoruma geliştirici yanıtı yazar (en fazla 350 karakter). |
-| `play__abonelikler` | Abonelikleri ve temel planlarını (base plan) listeler: süre, durum, fiyatlandırılan ülke sayısı. |
-| `play__abonelik_fiyatlari` | Bir temel planın ülke ülke fiyatlarını ve yeni abonelere açık olup olmadığını getirir. |
+| `play__abonelikler` | Abonelikleri ve temel planlarını (base plan) listeler: süre, durum, fiyatlandırılan ülke sayısı. Arşivlenmişleri istersen dahil eder. |
+| `play__abonelik_fiyatlari` | Bir temel planın ülke ülke fiyatlarını ve yeni abonelere açık olup olmadığını getirir; tek tek listelenmemiş ülkeler için "diğer bölgeler" yedek fiyatına da bakar. |
 | `play__urunler` | Tek seferlik ürünleri listeler; yeni (`oneTimeProducts`) ve eski (`inappproducts`) modelin ikisini de dener. |
 | `play__satin_alma_dogrula` | Bir satın alma token'ını doğrular: abonelik durumu, onay durumu, bitiş tarihi, test satın alması mı. |
-| `play__iade_edilenler` | İptal edilmiş, iade edilmiş veya geri alınmış satın almaları listeler. |
-| `play__cokme_orani` | Android vitals çökme oranını ve etkilenen kullanıcı sayısını günlük olarak getirir. |
+| `play__iade_edilenler` | İptal edilmiş, iade edilmiş veya geri alınmış satın almaları listeler; iade sebebini ve kaynağını okunur hale getirir. Google yalnızca son 30 günü verir. |
+| `play__cokme_orani` | Android vitals çökme oranını, ölçüme giren farklı kullanıcı sayısıyla birlikte günlük olarak getirir. |
 
 ### İki mağaza birden (`magaza__`)
 
@@ -157,13 +159,15 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 | `magaza__cagir` ✎ | Bulunan operasyonu çalıştırır. Yol parametrelerini otomatik yerine koyar; veri değiştiren işlemler `onayla=true` olmadan çalışmaz. |
 | `magaza__sema` | Bir operasyonun istek gövdesinin nasıl olması gerektiğini gösterir; POST/PATCH çağrılarından önce kullanılır. |
 
+`magaza__cagir` burada ✎ ile işaretli, çünkü veri değiştiren operasyonları da çalıştırabilir. Buna karşılık `npx magaza-mcp araclar` çıktısında ✎ görünmez: araç aynı zamanda katalogdaki bütün okuma uçlarının tek kapısı olduğu için salt-okunur modda listeden düşmez, yalnızca yazma operasyonları kapatılır.
+
 ## Tam API erişimi
 
-Yukarıdaki seçilmiş araçlar günlük işin büyük kısmını görür. Geri kalanı için sunucu, iki mağazanın API'lerinin **tamamını** taşır — toplam **1281 operasyon**:
+Yukarıdaki seçilmiş araçlar günlük işin büyük kısmını görür. Geri kalanı için sunucu, iki mağazanın API'lerinin **tamamını** taşır — toplam **1440 operasyon**:
 
 | Kaynak | Operasyon |
 | --- | --- |
-| App Store Connect API v4.5 | 1111 |
+| App Store Connect API v4.5 | 1270 |
 | Android Publisher API v3 | 145 |
 | Play Developer Reporting API v1beta1 | 25 |
 
@@ -175,14 +179,14 @@ Hazır araçlar arasında işini görecek bir şey yoksa model önce `magaza__en
 
 | | Araç sayısı | Araç tanımlarının bağlamdaki maliyeti |
 | --- | --- | --- |
-| **magaza-mcp** | 27 | **~3.500 token** |
-| 1281 operasyonun hepsi ayrı araç olsaydı | 1281 | ~184.000 token |
+| **magaza-mcp** | 27 | **~4.000 token** |
+| 1440 operasyonun hepsi ayrı araç olsaydı | 1440 | ~210.000 token |
 
-Kapalı özellik yok: 1281 operasyonun tamamına erişilebiliyor, ama kullanılmayanın maliyeti sıfır. Model bir şeye ihtiyaç duyduğu anda arayıp buluyor.
+Kapalı özellik yok: 1440 operasyonun tamamına erişilebiliyor, ama kullanılmayanın maliyeti sıfır. Model bir şeye ihtiyaç duyduğu anda arayıp buluyor.
 
 Bu yüzden `magaza-mcp`'de "şu özelliği açayım mı, token yer" diye bir ayar da yok — açılacak bir şey yok, hepsi zaten erişilebilir.
 
-Katalogların tamamı Apple ve Google'ın **resmî spesifikasyonlarından** üretilir: Apple'ın yayınladığı App Store Connect OpenAPI dosyası ile Google'ın Android Publisher ve Play Developer Reporting discovery dökümanları. Elle yazılmış uç nokta listesi yoktur; spesifikasyon güncellendiğinde katalog yeniden üretilir. Eskimiş (deprecated) işaretli operasyonlar katalog dışı bırakılır.
+Katalogların tamamı Apple ve Google'ın **resmî spesifikasyonlarından** üretilir: Apple'ın yayınladığı App Store Connect OpenAPI dosyası ile Google'ın Android Publisher ve Play Developer Reporting discovery dökümanları. Elle yazılmış uç nokta listesi yoktur; spesifikasyon güncellendiğinde katalog yeniden üretilir. Apple'ın eskimiş (deprecated) işaretlediği 159 operasyon katalogdan atılmaz — bazıları o yeteneğe giden tek yol — ama özetleri `[ESKİMİŞ]` ile başlar ve arama sonuçlarında geriye itilirler.
 
 ## Gereken izinler
 
@@ -196,9 +200,10 @@ Katalogların tamamı Apple ve Google'ın **resmî spesifikasyonlarından** üre
 ## Güvenlik
 
 - **Anahtarlar Anahtar Zinciri'nde.** Apple `.p8` özel anahtarı ve Google servis hesabı JSON'u macOS Anahtar Zinciri'nde saklanır; ayar dosyalarına, ortam değişkenlerine veya repoya yazılmaz. Anahtar Zinciri'nin olmadığı sistemlerde izinleri `0600` olan bir dosyaya düşülür.
-- **Veri değiştiren işlemler onay ister.** `magaza__cagir` ile yapılan POST/PATCH/PUT/DELETE çağrıları ilk seferde çalışmaz: ne yapılacağını, beklenen gövdeyi ve uyarıyı döndürür; işlem ancak kullanıcı onayladıktan sonra `onayla=true` ile tekrarlandığında yürür.
-- **Salt-okunur mod.** `--salt-okunur` bayrağı (veya `SALT_OKUNUR=1`) yazma yapabilen bütün araçları listeden tamamen çıkarır. Model onları göremez, dolayısıyla çağıramaz.
-- **Telemetri yok.** Sunucu hiçbir analitik, hata raporu veya kullanım verisi göndermez. Ağ trafiği yalnızca `api.appstoreconnect.apple.com`, `androidpublisher.googleapis.com` ve `playdeveloperreporting.googleapis.com` adreslerine gider. Araya giren bir sunucu yoktur; verilerin doğrudan Apple ve Google ile senin makinen arasında akar.
+- **Veri değiştiren işlemler onay ister.** `magaza__cagir` ile yapılan POST/PATCH/PUT/DELETE çağrıları ve `appstore__yorum_yanitla` / `appstore__metin_guncelle` ilk seferde çalışmaz: ne yapılacağını, beklenen gövdeyi ve uyarıyı döndürürler; işlem ancak kullanıcı onayladıktan sonra `onayla=true` ile tekrarlandığında yürür.
+- **Salt-okunur mod.** `--salt-okunur` bayrağı (veya `SALT_OKUNUR=1`) yazma yapan araçları (`appstore__yorum_yanitla`, `appstore__metin_guncelle`, `play__yorum_yanitla`) listeden tamamen çıkarır: model onları göremez, dolayısıyla çağıramaz. 27 araç 24'e düşer. Tek istisna `magaza__cagir`'dır; o listede kalır çünkü katalogdaki bütün **okuma** uçlarına da bu araçtan gidiliyor — ama veri değiştiren bir operasyon istendiğinde "sunucu salt-okunur modda" diyip reddeder.
+- **İstemci hangi aracın veri değiştirdiğini görür.** Sunucu araç listesini MCP `annotations` alanlarıyla (`readOnlyHint`, `destructiveHint`) birlikte verir; onay arayüzü olan istemciler yazma araçlarını buna göre ayırt eder.
+- **Telemetri yok.** Sunucu hiçbir analitik, hata raporu veya kullanım verisi göndermez. Ağ trafiği yalnızca `api.appstoreconnect.apple.com`, `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com` ve Google erişim token'ı için `oauth2.googleapis.com` adreslerine gider. Araya giren bir sunucu yoktur; verilerin doğrudan Apple ve Google ile senin makinen arasında akar.
 
 ## Sorun giderme
 

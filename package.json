@@ -6,7 +6,11 @@
   "bin": {
     "magaza-mcp": "dist/src/cli.js"
   },
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
+  "exports": {
+    ".": "./dist/src/index.js",
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist",
     "spec",
@@ -14,8 +18,17 @@
     "LICENSE",
     "THIRD-PARTY-NOTICES.md"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tunaarikaya/magaza-mcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tunaarikaya/magaza-mcp/issues"
+  },
+  "homepage": "https://github.com/tunaarikaya/magaza-mcp#readme",
   "scripts": {
-    "build": "tsc && node scripts/kopyala-katalog.mjs",
+    "temizle": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run temizle && tsc && node scripts/kopyala-katalog.mjs",
     "dev": "tsc --watch",
     "kontrol": "tsc --noEmit",
     "spec:guncelle": "node scripts/spec-guncelle.mjs",

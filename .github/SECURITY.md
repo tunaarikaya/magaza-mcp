@@ -33,12 +33,20 @@ POST, PATCH, PUT ve DELETE çağrıları ilk seferde yürümez. Sunucu önce ne
 yapılacağını, beklenen gövdeyi ve uyarısını döndürür; işlem ancak siz
 onayladıktan sonra, `onayla=true` ile tekrar çağrıldığında gerçekleşir.
 
-### Salt-okunur mod her şeyi kapatır
+### Salt-okunur mod yazmayı kapatır
 
-`--salt-okunur` bayrağı (ya da `SALT_OKUNUR=1` ortam değişkeni) yazma
-yapabilen bütün araçları araç listesinden tamamen çıkarır. Model onları
-göremez, dolayısıyla çağıramaz. Üretim hesabınıza yalnızca okuma erişimi
-vermek istiyorsanız doğru yol budur.
+`--salt-okunur` bayrağı (ya da `SALT_OKUNUR=1` ortam değişkeni) yazma yapan
+araçları — `appstore__yorum_yanitla`, `appstore__metin_guncelle` ve
+`play__yorum_yanitla` — araç listesinden tamamen çıkarır. Model onları göremez,
+dolayısıyla çağıramaz.
+
+Tek istisna `magaza__cagir`'dır. O listede kalır, çünkü katalogdaki bütün
+**okuma** uçlarına da bu araçtan gidiliyor; işaretlersek salt-okunur modda
+hiçbir şey okunamaz hale gelirdi. Yazma koruması bu araçta operasyon bazında
+uygulanır: veri değiştiren bir operasyon istendiğinde çağrı
+"sunucu salt-okunur modda" hatasıyla reddedilir, gövde hiç gönderilmez.
+
+Üretim hesabınıza yalnızca okuma erişimi vermek istiyorsanız doğru yol budur.
 
 ## Güvenlik açığı bildirimi
 
@@ -72,8 +80,9 @@ sürümlere geriye dönük yama çıkarılmaz.
 
 ## Anahtarınız sızdıysa
 
-1. Apple tarafında: App Store Connect → Users and Access → Integrations
-   bölümünden ilgili anahtarı iptal edin (revoke), yenisini üretin.
+1. Apple tarafında: App Store Connect → Kullanıcılar ve Erişim →
+   Entegrasyonlar bölümünden ilgili anahtarı iptal edin (revoke), yenisini
+   üretin.
 2. Google tarafında: Google Cloud Console → IAM & Admin → Service Accounts
    bölümünden anahtarı silin, yeni bir anahtar oluşturun.
 3. Yerel kopyaları silin ve `magaza-mcp` kurulumunu yeni anahtarla tekrarlayın.

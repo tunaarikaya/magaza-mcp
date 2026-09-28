@@ -5,7 +5,7 @@
  * Argümansız çalıştırıldığında MCP sunucusu olarak stdio üzerinden konuşur —
  * istemciler onu böyle başlatır. "kur" ile kurulum sihirbazı açılır.
  */
-import { araclariTopla, sunucuyuBaslat } from "./index.js";
+import { araclariTopla, SURUM, sunucuyuBaslat } from "./index.js";
 import { durumKomutu, kaydetKomutu } from "./kaydet.js";
 import { kurulumSihirbazi } from "./kur.js";
 
@@ -73,7 +73,7 @@ async function main(): Promise<void> {
     case "surum":
     case "--version":
     case "-v":
-      console.log("0.1.0");
+      console.log(SURUM);
       break;
 
     case "yardim":

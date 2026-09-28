@@ -16,7 +16,8 @@ npm run kontrol
 - `npm run kontrol` — `tsc --noEmit`, yani tip kontrolü. PR göndermeden önce temiz geçmeli.
 - `npm run dev` — derleyiciyi izleme kipinde çalıştırır.
 
-Node 20 veya 22 kullanın; CI bu iki sürümde çalışır.
+Node 18 ve üzeri destekleniyor (`package.json` → `engines`); geliştirme için
+Node 20 veya 22 önerilir.
 
 ## Araç eklerken
 
@@ -30,8 +31,10 @@ Yeni araçlar `src/araclar/` altına girer. Oradaki mevcut üsluba uyun:
   anlatsın.
 - **Veri değiştiren araçlar onay ister.** Yazma yapan bir araç `onayla=true`
   gelmeden işi yürütmemeli, önce ne yapacağını anlatmalı.
-- **Salt-okunur modu unutmayın.** Yazma yapabilen araçlar `--salt-okunur`
-  açıkken listeden çıkarılmalı.
+- **Salt-okunur modu unutmayın.** Yazma yapan araçlar `yazma: true` ile
+  işaretlenir; `--salt-okunur` açıkken bunlar listeden çıkarılır. Tek istisna
+  `magaza__cagir`: hem okuma hem yazma uçlarının tek kapısı olduğu için
+  listede kalır ve yazma korumasını operasyon bazında kendisi uygular.
 
 ## Kataloglar elle düzenlenmez
 
@@ -46,8 +49,12 @@ node scripts/uret-katalog.mjs
 Üretici betiğin kendisinde (`scripts/uret-katalog.mjs`) değişiklik yapmak
 serbesttir; çıktısını elle düzeltmek değil.
 
-`spec/` altındaki dosyalar da elle güncellenmez: haftalık çalışan
-`spec-guncelle` iş akışı onları Apple ve Google'dan indirip otomatik PR açar.
+`spec/` altındaki dosyalar da elle güncellenmez. Apple ve Google'dan taze
+sürümlerini indirip katalogları yeniden üretmek için:
+
+```bash
+npm run spec:guncelle
+```
 
 ## PR göndermeden önce
 

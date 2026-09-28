@@ -5,6 +5,8 @@
  * sadece App Store seçildiyse hiçbir play__ aracı yüklenmez, tersi de geçerli.
  * Böylece tek paket olmasına rağmen iki mağaza birbirine karışmaz.
  */
+import { createRequire } from "node:module";
+
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import {
@@ -17,6 +19,29 @@ import { dispatchAraclari } from "./araclar/dispatch.js";
 import { ortakAraclar } from "./araclar/ortak.js";
 import { playAraclari } from "./araclar/play.js";
 import { acikMagazalar, saltOkunur, type Arac } from "./araclar/tip.js";
+
+/**
+ * Sürüm tek kaynaktan okunur.
+ *
+ * Elle iki yere yazılırsa biri güncellenmeden kalır ve hem `magaza-mcp surum`
+ * hem de MCP el sıkışması yanlış sürüm bildirir.
+ */
+export const SURUM: string = createRequire(import.meta.url)(
+  "../../package.json",
+).version;
+
+/**
+ * Araç istemciye "veri değiştirebilir" diye bildirilmeli mi?
+ *
+ * `yazma` bayrağı salt-okunur modda aracın listeden düşürülmesi için var.
+ * `magaza__cagir` bilerek o bayrağı taşımıyor — salt-okunur modda da
+ * katalogdaki okuma operasyonlarına erişim ondan geçiyor — ama katalogdaki
+ * her yazma operasyonunu çalıştırabilen tek araç yine o. İstemciye
+ * "zararsız okuma" diye tanıtmak, onun onay arayüzünü yanıltmak olurdu.
+ */
+function yazabilirMi(arac: Arac): boolean {
+  return !!arac.yazma || arac.ad === "magaza__cagir";
+}
 
 export function araclariTopla(): Arac[] {
   const acik = acikMagazalar();
@@ -35,7 +60,7 @@ export async function sunucuyuBaslat(): Promise<void> {
   const kayit = new Map(araclar.map((a) => [a.ad, a]));
 
   const sunucu = new Server(
-    { name: "magaza-mcp", version: "0.1.0" },
+    { name: "magaza-mcp", version: SURUM },
     { capabilities: { tools: {} } },
   );
 
@@ -44,6 +69,14 @@ export async function sunucuyuBaslat(): Promise<void> {
       name: a.ad,
       description: a.aciklama,
       inputSchema: a.girdiSemasi,
+      // MCP istemcileri kendi onay arayüzlerini bu ipuçlarına göre kurar.
+      // Bunları göndermezsek istemci hangi aracın veri değiştirdiğini bilemez
+      // ve okuma ile yazmayı aynı kefeye koyar.
+      annotations: {
+        readOnlyHint: !yazabilirMi(a),
+        destructiveHint: yazabilirMi(a),
+        openWorldHint: true,
+      },
     })),
   }));
 

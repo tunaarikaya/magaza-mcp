@@ -17,7 +17,7 @@ export type AppleKimlik = {
   ozelAnahtar: string; // .p8 dosyasının PEM içeriği
 };
 
-let onbellek: { token: string; bitis: number } | null = null;
+let onbellek: { token: string; bitis: number; parmakIzi: string } | null = null;
 
 function base64url(veri: Buffer | string): string {
   return Buffer.from(veri)
@@ -27,13 +27,34 @@ function base64url(veri: Buffer | string): string {
     .replace(/=+$/, "");
 }
 
+/**
+ * .p8 içeriğini Node'un kabul edeceği hâle getirir.
+ *
+ * Anahtar kopyala-yapıştır ile geldiğinde satır sonları çoğu zaman düz metin
+ * "\n" dizisine dönüşür, başına BOM veya tırnak takılır. Bu hâliyle imzalama
+ * "unsupported" diye patlar; sebebi de görünmez.
+ */
+function pemDuzelt(ham: string): string {
+  return ham
+    .replace(/^\uFEFF/, "")
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .replace(/\\r\\n|\\n/g, "\n")
+    .replace(/\r\n/g, "\n")
+    .trim();
+}
+
 /** Kasadaki Apple kimlik bilgilerini okur. Eksikse null döner. */
 export function kimlikOku(): AppleKimlik | null {
   const keyId = oku("apple_key_id");
   const issuerId = oku("apple_issuer_id");
   const ozelAnahtar = oku("apple_ozel_anahtar");
   if (!keyId || !issuerId || !ozelAnahtar) return null;
-  return { keyId, issuerId, ozelAnahtar };
+  return {
+    keyId: keyId.trim(),
+    issuerId: issuerId.trim(),
+    ozelAnahtar: pemDuzelt(ozelAnahtar),
+  };
 }
 
 /**
@@ -43,6 +64,15 @@ export function kimlikOku(): AppleKimlik | null {
  * olarak DER üretir, bu yüzden `dsaEncoding: "ieee-p1363"` şart.
  */
 export function tokenUret(kimlik: AppleKimlik): string {
+  const anahtar = pemDuzelt(kimlik.ozelAnahtar);
+  if (!/-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(anahtar)) {
+    throw new Error(
+      "Apple özel anahtarı PEM biçiminde görünmüyor.\n" +
+        "App Store Connect'ten indirdiğin AuthKey_XXXXXXXX.p8 dosyasının tamamını " +
+        "(-----BEGIN PRIVATE KEY----- satırı dâhil) ver.",
+    );
+  }
+
   const simdi = Math.floor(Date.now() / 1000);
 
   const baslik = base64url(
@@ -62,10 +92,24 @@ export function tokenUret(kimlik: AppleKimlik): string {
   imzalayici.update(imzalanacak);
   imzalayici.end();
 
-  const imza = imzalayici.sign({
-    key: kimlik.ozelAnahtar,
-    dsaEncoding: "ieee-p1363",
-  });
+  let imza: Buffer;
+  try {
+    imza = imzalayici.sign({ key: anahtar, dsaEncoding: "ieee-p1363" });
+  } catch (hata) {
+    throw new Error(
+      "Apple özel anahtarı ile imzalanamadı. Dosya bozuk olabilir ya da .p8 " +
+        "yerine başka bir anahtar verilmiş olabilir.\n" +
+        `Ayrıntı: ${(hata as Error).message}`,
+    );
+  }
+
+  // ES256 imzası 64 bayt (r||s) olmalı; değilse anahtar P-256 değildir.
+  if (imza.length !== 64) {
+    throw new Error(
+      "Üretilen imza ES256 için beklenen 64 baytta değil. App Store Connect " +
+        "anahtarları P-256 eğrisini kullanır; verilen anahtar başka bir eğriye ait.",
+    );
+  }
 
   return `${imzalanacak}.${base64url(imza)}`;
 }
@@ -73,7 +117,6 @@ export function tokenUret(kimlik: AppleKimlik): string {
 /** Geçerli bir token döndürür; gerekiyorsa yenisini üretir. */
 export function gecerliToken(): string {
   const simdi = Math.floor(Date.now() / 1000);
-  if (onbellek && onbellek.bitis - 60 > simdi) return onbellek.token;
 
   const kimlik = kimlikOku();
   if (!kimlik) {
@@ -83,8 +126,15 @@ export function gecerliToken(): string {
     );
   }
 
+  // Önbellek kimliğe bağlı: kurulum sırasında anahtar değişirse eski token
+  // sessizce kullanılmaya devam etmesin.
+  const parmakIzi = `${kimlik.keyId}:${kimlik.issuerId}`;
+  if (onbellek && onbellek.parmakIzi === parmakIzi && onbellek.bitis - 60 > simdi) {
+    return onbellek.token;
+  }
+
   const token = tokenUret(kimlik);
-  onbellek = { token, bitis: simdi + OMUR_SANIYE };
+  onbellek = { token, bitis: simdi + OMUR_SANIYE, parmakIzi };
   return token;
 }
 

@@ -10,7 +10,11 @@ import { join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
-import { tokenUret, type AppleKimlik } from "./kimlik/apple.js";
+import {
+  onbellegiTemizle as appleOnbellegiTemizle,
+  tokenUret,
+  type AppleKimlik,
+} from "./kimlik/apple.js";
 import { kasaNerede, yaz } from "./kimlik/kasa.js";
 import { ISTEMCILER, kur as istemcilereKur, kuruluMu, sunucuGirdisi } from "./istemciler.js";
 
@@ -108,6 +112,8 @@ export async function kurulumSihirbazi(): Promise<void> {
       yaz("apple_key_id", keyId);
       yaz("apple_issuer_id", issuerId);
       yaz("apple_ozel_anahtar", ozelAnahtar);
+      // Aynı süreç içinde anahtar değiştiyse eski token bellekte kalmasın.
+      appleOnbellegiTemizle();
       console.log(`     ${tik} Anahtar kaydedildi ${soluk(`(${kasaNerede()})`)}`);
       console.log();
 

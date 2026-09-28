@@ -1,22 +1,50 @@
-# Gizli anahtarlar — ASLA repoya girmeyecek
+# ------------------------------------------------------------------ #
+# Gizli anahtarlar — ASLA repoya girmeyecek                            #
+# ------------------------------------------------------------------ #
+# Apple
 *.p8
-*.pem
+*.p12
+*.pfx
+*.cer
+*.certSigningRequest
+*.mobileprovision
+
+# Google / Android
 *-key.json
+*_key.json
 *service-account*.json
+*service_account*.json
+*serviceAccount*.json
+*ServiceAccount*.json
+credentials.json
+client_secret*.json
+gha-creds-*.json
+*.jks
+*.keystore
+
+# Genel
+*.pem
+*.key
 .env
 .env.*
 !.env.ornek
 kimlik-yedek/
 
-# Node
+# ------------------------------------------------------------------ #
+# Node                                                                 #
+# ------------------------------------------------------------------ #
 node_modules/
 dist/
 *.tsbuildinfo
 npm-debug.log*
 
-# macOS
-.DS_Store
+# Paketleme artıkları (npm pack)
+*.tgz
 
-# Geçici
+# ------------------------------------------------------------------ #
+# macOS / geçici                                                       #
+# ------------------------------------------------------------------ #
+.DS_Store
+Thumbs.db
 *.log
 .tmp/

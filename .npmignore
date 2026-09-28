@@ -1,14 +1,27 @@
-# npm paketine neyin girmeyeceği.
+# ------------------------------------------------------------------ #
+# DİKKAT: Bu dosya şu anda ETKİSİZDİR.                                 #
+# ------------------------------------------------------------------ #
+# package.json'da bir "files" alanı olduğu sürece npm yalnızca onu
+# dikkate alır; kök .npmignore (ve .gitignore) tamamen yok sayılır.
+# Bu doğrulandı: .npmignore'a spec/play-reporting.json eklendiğinde dosya
+# yine de pakete girdi.
 #
-# NOT: package.json'daki "files" alanı asıl belirleyicidir; bu dosya onunla
-# tutarlı olacak şekilde yazılmıştır ve .gitignore'un yanlışlıkla devreye
-# girip dist/ dizinini paketten düşürmesini de engeller.
+# Yani pakete neyin gireceğini DEĞİŞTİRMEK İSTİYORSAN package.json'daki
+# "files" alanını düzenle, burayı değil.
 #
-# PAKETE GİRENLER: dist/, spec/, README.md, LICENSE, THIRD-PARTY-NOTICES.md
+# Bu dosya yalnızca bir emniyet ağı olarak duruyor: ileride "files" alanı
+# kaldırılırsa devreye girer ve kaynak/altyapı dosyalarının pakete
+# sızmasını engeller.
 #
-# spec/ MUTLAKA pakete dahildir. spec/appstore-openapi.json çalışma anında
-# okunur; magaza__sema aracı gövde şemalarını oradan çıkarır. Bu yüzden paket
-# boyutu ~7 MB'tır. Bu normaldir, küçültmek için spec dosyalarını çıkarmayın.
+# PAKETE GİRENLER ("files"): dist/, spec/, README.md, LICENSE,
+#                            THIRD-PARTY-NOTICES.md
+#
+# spec/ MUTLAKA pakete dahildir; çalışma anında okunur:
+#   - spec/appstore-openapi.json  → magaza__sema, App Store gövde şemaları
+#   - spec/play.json              → magaza__sema, Android Publisher gövdeleri
+#   - spec/play-reporting.json    → magaza__sema, Play Reporting gövdeleri
+# Bu yüzden paket açılmış hâlde ~9 MB'tır (sıkıştırılmış ~450 kB).
+# Küçültmek için spec dosyalarını ÇIKARMAYIN, magaza__sema bozulur.
 
 # --- Depo altyapısı ---
 .github/
@@ -17,6 +30,7 @@
 .env
 .env.*
 !.env.ornek
+AGENTS.md
 
 # --- Kaynak ve derleme girdileri ---
 src/
@@ -33,6 +47,7 @@ tests/
 *.test.js
 *.spec.ts
 *.spec.js
+*.tgz
 .tmp/
 *.log
 npm-debug.log*
@@ -43,7 +58,18 @@ Thumbs.db
 
 # --- Gizli dosyalar (çift emniyet) ---
 *.p8
+*.p12
+*.pfx
+*.cer
+*.mobileprovision
 *.pem
+*.key
+*.jks
+*.keystore
 *-key.json
+*_key.json
 *service-account*.json
+*serviceAccount*.json
+credentials.json
+client_secret*.json
 kimlik-yedek/
