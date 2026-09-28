@@ -17,7 +17,8 @@ npm run kontrol
 - `npm run dev` — derleyiciyi izleme kipinde çalıştırır.
 
 Node 18 ve üzeri destekleniyor (`package.json` → `engines`); geliştirme için
-Node 20 veya 22 önerilir.
+Node 20 veya 22 önerilir — sürekli tümleştirme bu iki sürümde çalışıyor
+(`.github/workflows/ci.yml`).
 
 ## Araç eklerken
 
@@ -55,6 +56,9 @@ sürümlerini indirip katalogları yeniden üretmek için:
 ```bash
 npm run spec:guncelle
 ```
+
+Bunu elle yapmaya çoğu zaman gerek yok: `.github/workflows/spec-guncelle.yml`
+her pazartesi aynı işi çalıştırıyor ve değişiklik varsa otomatik PR açıyor.
 
 ## PR göndermeden önce
 

@@ -1,0 +1,107 @@
+name: Spec güncelle
+
+on:
+  schedule:
+    # Her pazartesi 04:17 UTC
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  guncelle:
+    name: Apple ve Google spec dosyalarını tazele
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+
+      - name: Node kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Bağımlılıkları yükle
+        run: npm ci
+
+      - name: Apple OpenAPI spesifikasyonunu indir
+        run: |
+          set -euo pipefail
+          mkdir -p spec gecici
+          curl --fail --silent --show-error --location --retry 3 --retry-delay 5 \
+            --output gecici/appstore-openapi.zip \
+            "https://developer.apple.com/sample-code/app-store-connect/app-store-connect-openapi-specification.zip"
+          unzip -o -q gecici/appstore-openapi.zip -d gecici/appstore
+          bulunan="$(find gecici/appstore -name 'openapi.oas.json' -type f | head -n 1)"
+          if [ -z "$bulunan" ]; then
+            echo "Zip içinde openapi.oas.json bulunamadı." >&2
+            find gecici/appstore -type f >&2
+            exit 1
+          fi
+          node -e "JSON.parse(require('node:fs').readFileSync(process.argv[1],'utf8'))" "$bulunan"
+          cp "$bulunan" spec/appstore-openapi.json
+
+      - name: Google Play discovery dökümanlarını indir
+        run: |
+          set -euo pipefail
+          mkdir -p spec
+          curl --fail --silent --show-error --location --retry 3 --retry-delay 5 \
+            --output spec/play.json \
+            'https://androidpublisher.googleapis.com/$discovery/rest?version=v3'
+          curl --fail --silent --show-error --location --retry 3 --retry-delay 5 \
+            --output spec/play-reporting.json \
+            'https://playdeveloperreporting.googleapis.com/$discovery/rest?version=v1beta1'
+          node -e "JSON.parse(require('node:fs').readFileSync('spec/play.json','utf8'))"
+          node -e "JSON.parse(require('node:fs').readFileSync('spec/play-reporting.json','utf8'))"
+
+      - name: Katalogları yeniden üret
+        run: node scripts/uret-katalog.mjs
+
+      - name: Tip kontrolü
+        run: npm run kontrol
+
+      - name: Geçici dosyaları temizle
+        run: rm -rf gecici
+
+      - name: Değişiklik var mı bak
+        id: fark
+        run: |
+          if [ -n "$(git status --porcelain spec src/katalog)" ]; then
+            echo "degisti=evet" >> "$GITHUB_OUTPUT"
+          else
+            echo "degisti=hayir" >> "$GITHUB_OUTPUT"
+            echo "Spec dosyaları güncel, açılacak PR yok."
+          fi
+
+      - name: Pull request aç
+        if: steps.fark.outputs.degisti == 'evet'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: otomasyon/spec-guncelle
+          delete-branch: true
+          add-paths: |
+            spec
+            src/katalog
+          commit-message: "spec: Apple ve Google spec dosyalarını güncelle"
+          title: "Spec güncellemesi: Apple ve Google tanımları tazelendi"
+          body: |
+            Bu pull request'i haftalık `spec-guncelle` iş akışı otomatik olarak açtı.
+
+            ### Ne yapıldı
+            - Apple App Store Connect OpenAPI spesifikasyonu yeniden indirildi (`spec/appstore-openapi.json`).
+            - Google Play Android Publisher discovery dökümanı yenilendi (`spec/play.json`).
+            - Google Play Developer Reporting discovery dökümanı yenilendi (`spec/play-reporting.json`).
+            - `node scripts/uret-katalog.mjs` ile `src/katalog/` altındaki kataloglar yeniden üretildi.
+
+            ### Birleştirmeden önce
+            - Katalog dosyalarındaki farkta beklenmedik bir operasyon kaybı var mı bakın.
+            - CI'nin tip kontrolünden ve derlemeden geçtiğinden emin olun.
+
+            Katalog dosyaları elle düzenlenmez; yalnızca üretici betikle güncellenir.
+          labels: |
+            spec
+            otomasyon
