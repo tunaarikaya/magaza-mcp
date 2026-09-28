@@ -1,0 +1,121 @@
+name: Hata bildirimi
+description: Beklenmedik bir davranış, hata mesajı veya çöken bir araç bildirin.
+title: "[Hata]: "
+labels: ["hata"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Önce güvenlik
+
+        **Key ID, Issuer ID, .p8 içeriği veya servis hesabı JSON'u YAPIŞTIRMAYIN.**
+
+        Log ve hata çıktılarını yapıştırmadan önce şunları temizleyin: erişim
+        anahtarları, JWT token'ları, `private_key` alanları, `client_email`
+        adresleri ve paylaşmak istemediğiniz uygulama/paket adları. Kimlik
+        bilgisi içeren bir issue açtıysanız, anahtarı hemen iptal edin.
+
+  - type: checkboxes
+    id: gizlilik
+    attributes:
+      label: Gizlilik onayı
+      options:
+        - label: Bu bildirimde hiçbir gerçek kimlik bilgisi, anahtar veya token paylaşmadığımı onaylıyorum.
+          required: true
+
+  - type: textarea
+    id: ozet
+    attributes:
+      label: Ne oldu?
+      description: Sorunu birkaç cümleyle anlatın.
+      placeholder: "magaza__cagir aracını çalıştırınca ... hatası aldım."
+    validations:
+      required: true
+
+  - type: textarea
+    id: beklenen
+    attributes:
+      label: Ne olmasını bekliyordunuz?
+    validations:
+      required: true
+
+  - type: textarea
+    id: adimlar
+    attributes:
+      label: Nasıl tekrarlanır?
+      description: Adım adım yazın. Asistana verdiğiniz isteği de ekleyebilirsiniz.
+      placeholder: |
+        1. Sunucuyu şu şekilde başlattım: ...
+        2. Asistana şunu söyledim: ...
+        3. Şu hata döndü: ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: magaza
+    attributes:
+      label: Hangi mağaza?
+      options:
+        - App Store
+        - Play
+        - İkisi
+        - Emin değilim
+    validations:
+      required: true
+
+  - type: dropdown
+    id: istemci
+    attributes:
+      label: Hangi istemci?
+      description: MCP sunucusunu hangi uygulamadan kullanıyorsunuz?
+      options:
+        - Claude Code
+        - Claude Desktop
+        - Antigravity
+        - Cursor
+        - Windsurf
+        - Codex
+        - Diğer
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node sürümü
+      description: "`node --version` çıktısı."
+      placeholder: "v22.11.0"
+    validations:
+      required: true
+
+  - type: input
+    id: surum
+    attributes:
+      label: magaza-mcp sürümü
+      placeholder: "0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: isletim
+    attributes:
+      label: İşletim sistemi
+      placeholder: "macOS 15.2 (Apple Silicon)"
+    validations:
+      required: false
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Hata çıktısı veya log
+      description: "Yapıştırmadan önce temizleyin. Otomatik olarak kod bloğuna alınır."
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: ek
+    attributes:
+      label: Eklemek istediğiniz başka bir şey
+    validations:
+      required: false

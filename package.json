@@ -1,0 +1,51 @@
+{
+  "name": "magaza-mcp",
+  "version": "0.1.0",
+  "description": "App Store Connect ve Google Play'i tek MCP sunucusunda birleştirir. Yapay zekâ asistanın iki mağazayı da yönetsin.",
+  "type": "module",
+  "bin": {
+    "magaza-mcp": "dist/src/cli.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "spec",
+    "README.md",
+    "LICENSE",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "scripts": {
+    "build": "tsc && node scripts/kopyala-katalog.mjs",
+    "dev": "tsc --watch",
+    "kontrol": "tsc --noEmit",
+    "spec:guncelle": "node scripts/spec-guncelle.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "app-store-connect",
+    "google-play",
+    "android-publisher",
+    "testflight",
+    "claude",
+    "antigravity",
+    "cursor",
+    "ios",
+    "android",
+    "turkce"
+  ],
+  "author": "tunaarikaya",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,52 @@
+# gitleaks ayarları — magaza-mcp
+#
+# Amaç: Apple .p8 özel anahtarlarının ve Google servis hesabı JSON'larının
+# yanlışlıkla repoya girmesini engellemek.
+#
+# Çalıştırmak için:
+#   gitleaks detect --config .gitleaks.toml --redact
+
+title = "magaza-mcp sızıntı taraması"
+
+[extend]
+useDefault = true
+
+# ------------------------------------------------------------------ #
+# Özel kurallar                                                        #
+# ------------------------------------------------------------------ #
+
+[[rules]]
+id = "magaza-ozel-anahtar-blogu"
+description = "PEM özel anahtar bloğu (Apple .p8 dahil)"
+regex = '''-----BEGIN(?: [A-Z]+)? PRIVATE KEY-----'''
+tags = ["anahtar", "pem", "apple", "p8"]
+
+[[rules]]
+id = "magaza-servis-hesabi-private-key"
+description = "Google servis hesabı JSON'unda private_key alanı"
+regex = '''"private_key"\s*:\s*"'''
+tags = ["anahtar", "google", "servis-hesabi"]
+
+[[rules]]
+id = "magaza-servis-hesabi-client-email"
+description = "Google servis hesabı JSON'unda client_email alanı"
+regex = '''"client_email"\s*:\s*"'''
+tags = ["kimlik", "google", "servis-hesabi"]
+
+# ------------------------------------------------------------------ #
+# Tarama dışı bırakılanlar                                             #
+# ------------------------------------------------------------------ #
+#
+# spec/ ve src/katalog/ dosyaları Apple ve Google'ın kamuya açık API
+# tanımlarıdır; üretilmiş veya olduğu gibi indirilmiş dosyalardır. İçlerinde
+# token'a benzeyen örnek dizgiler, örnek kimlikler ve uzun base64 parçaları
+# geçebilir. Bunlar sır değildir, taramadan çıkarılırlar.
+
+[allowlist]
+description = "Üretilmiş ve kamuya açık spec dosyaları"
+paths = [
+  '''^spec/''',
+  '''^src/katalog/''',
+  '''^dist/''',
+  '''^package-lock\.json$''',
+]

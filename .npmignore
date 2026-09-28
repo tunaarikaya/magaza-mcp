@@ -1,0 +1,49 @@
+# npm paketine neyin girmeyeceği.
+#
+# NOT: package.json'daki "files" alanı asıl belirleyicidir; bu dosya onunla
+# tutarlı olacak şekilde yazılmıştır ve .gitignore'un yanlışlıkla devreye
+# girip dist/ dizinini paketten düşürmesini de engeller.
+#
+# PAKETE GİRENLER: dist/, spec/, README.md, LICENSE, THIRD-PARTY-NOTICES.md
+#
+# spec/ MUTLAKA pakete dahildir. spec/appstore-openapi.json çalışma anında
+# okunur; magaza__sema aracı gövde şemalarını oradan çıkarır. Bu yüzden paket
+# boyutu ~7 MB'tır. Bu normaldir, küçültmek için spec dosyalarını çıkarmayın.
+
+# --- Depo altyapısı ---
+.github/
+.gitleaks.toml
+.editorconfig
+.env
+.env.*
+!.env.ornek
+
+# --- Kaynak ve derleme girdileri ---
+src/
+scripts/
+tsconfig.json
+*.tsbuildinfo
+
+# --- Geliştirme artıkları ---
+node_modules/
+coverage/
+test/
+tests/
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+.tmp/
+*.log
+npm-debug.log*
+
+# --- İşletim sistemi ---
+.DS_Store
+Thumbs.db
+
+# --- Gizli dosyalar (çift emniyet) ---
+*.p8
+*.pem
+*-key.json
+*service-account*.json
+kimlik-yedek/

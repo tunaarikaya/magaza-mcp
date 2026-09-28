@@ -1,0 +1,83 @@
+name: Özellik isteği
+description: Yeni bir araç, yeni bir mağaza yeteneği veya bir iyileştirme önerin.
+title: "[Özellik]: "
+labels: ["özellik"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Öneriniz için teşekkürler. Lütfen bu formda da gerçek kimlik bilgisi,
+        anahtar veya token paylaşmayın.
+
+  - type: textarea
+    id: sorun
+    attributes:
+      label: Hangi ihtiyacı karşılıyor?
+      description: Şu an neyi yapamıyorsunuz ya da ne zahmetli?
+      placeholder: "Sürüm notlarını tek tek dile girmek yerine ... istiyorum."
+    validations:
+      required: true
+
+  - type: textarea
+    id: oneri
+    attributes:
+      label: Önerdiğiniz çözüm
+      description: Nasıl çalışmasını hayal ediyorsunuz? Örnek bir asistan isteği yazabilirsiniz.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: magaza
+    attributes:
+      label: Hangi mağaza?
+      options:
+        - App Store
+        - Play
+        - İkisi
+        - Mağazadan bağımsız
+    validations:
+      required: true
+
+  - type: dropdown
+    id: istemci
+    attributes:
+      label: Hangi istemci?
+      options:
+        - Claude Code
+        - Claude Desktop
+        - Antigravity
+        - Cursor
+        - Windsurf
+        - Codex
+        - Diğer
+        - Fark etmez
+    validations:
+      required: true
+
+  - type: dropdown
+    id: yazma
+    attributes:
+      label: Bu özellik veri değiştirir mi?
+      description: Salt okunur mu, yoksa mağazada bir şey oluşturur/değiştirir mi?
+      options:
+        - Salt okunur (sadece bilgi getirir)
+        - Veri değiştirir (oluşturur, günceller veya siler)
+        - Emin değilim
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node sürümü
+      placeholder: "v22.11.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatif
+    attributes:
+      label: Denediğiniz alternatifler
+      description: Şu an bu işi nasıl hallediyorsunuz?
+    validations:
+      required: false

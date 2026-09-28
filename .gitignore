@@ -1,0 +1,22 @@
+# Gizli anahtarlar — ASLA repoya girmeyecek
+*.p8
+*.pem
+*-key.json
+*service-account*.json
+.env
+.env.*
+!.env.ornek
+kimlik-yedek/
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+
+# macOS
+.DS_Store
+
+# Geçici
+*.log
+.tmp/

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Güvenlik açığı bildirimi
+    url: https://github.com/tunaarikaya/magaza-mcp/security/advisories/new
+    about: Güvenlik açıklarını herkese açık issue olarak DEĞİL, özel güvenlik danışmanlığı olarak bildirin.
+  - name: Soru ve tartışma
+    url: https://github.com/tunaarikaya/magaza-mcp/discussions
+    about: Kullanım sorularınız ve fikirleriniz için tartışmalar bölümünü kullanın.
