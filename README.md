@@ -474,6 +474,12 @@ analitik raporlar daha yüksek yetki ister.
   dışındaki bir adrese token taşıyamaz.
 - **İstemci hangi aracın veri değiştirdiğini görür.** Araç listesi MCP
   `annotations` alanlarıyla (`readOnlyHint`, `destructiveHint`) birlikte verilir.
+- **Paket kaynağı kanıtlanabilir.** npm'e yayınlanan her sürüm GitHub Actions
+  içinde derlenir ve npm, Sigstore ile imzalı bir köken belgesi (provenance)
+  üretir: npm sayfasındaki **Provenance** bölümü, indirdiğin tarball'ın bu
+  depodaki hangi commit'ten üretildiğini gösterir. Yayın için depoda saklanan
+  bir token yoktur; GitHub her yayında kısa ömürlü, imzalı bir kimlik üretir
+  (trusted publishing), dolayısıyla çalınacak bir yayın anahtarı da yoktur.
 - **Telemetri yok.** Hiçbir analitik, hata raporu veya kullanım verisi
   gönderilmez. Ağ trafiği yalnızca `api.appstoreconnect.apple.com`,
   `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com` ve
