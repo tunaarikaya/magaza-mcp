@@ -1,0 +1,79 @@
+# npm yayını — kaynağı kanıtlanabilir (provenance) sürüm.
+#
+# Paketi burada, GitHub Actions içinde derleyip yayınlıyoruz. npm bu sırada
+# Sigstore ile imzalı bir köken belgesi üretiyor: "bu tarball, bu repodaki bu
+# commit'ten, bu workflow tarafından üretildi". npm sayfasında "Provenance"
+# bölümü olarak görünür ve kimse elle taklit edemez.
+#
+# Çalıştırmak için: sürüm etiketi it (npm version minor && git push --follow-tags)
+# veya Actions sekmesinden elle tetikle.
+
+name: Yayınla
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      etiket:
+        description: "Yayınlanacak sürüm etiketi (örn. v0.2.0)"
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: yayin-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  yayinla:
+    name: npm'e yayınla
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      # Provenance imzası bu izin olmadan üretilemez.
+      id-token: write
+
+    steps:
+      - name: Depoyu al
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.etiket || github.ref }}
+
+      - name: Node kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Bağımlılıkları yükle
+        run: npm ci
+
+      - name: Sürüm etiketle uyuşuyor mu?
+        # Yanlış sürümün yayınlanması geri alınamaz; etiket ile package.json
+        # ayrışmışsa burada duruyoruz.
+        run: |
+          etiket="${{ github.event.inputs.etiket || github.ref_name }}"
+          surum="v$(node -p "require('./package.json').version")"
+          if [ "$etiket" != "$surum" ]; then
+            echo "Etiket ($etiket) ile package.json sürümü ($surum) uyuşmuyor."
+            exit 1
+          fi
+          echo "Sürüm doğrulandı: $surum"
+
+      - name: Tip kontrolü
+        run: npm run kontrol
+
+      - name: Derle
+        run: npm run build
+
+      - name: Testler
+        run: node --test dist/test/*.test.js
+
+      - name: Yayınla
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
