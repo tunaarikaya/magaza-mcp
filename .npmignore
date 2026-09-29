@@ -30,7 +30,6 @@
 .env
 .env.*
 !.env.ornek
-AGENTS.md
 
 # --- Kaynak ve derleme girdileri ---
 src/
