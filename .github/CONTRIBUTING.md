@@ -73,6 +73,44 @@ her pazartesi aynı işi çalıştırıyor ve değişiklik varsa otomatik PR aç
 
 Emin değilseniz `git diff` çıktısını bir kez okuyun; en hızlı kontrol bu.
 
+## Sürüm çıkarma
+
+Yayın elle yapılmaz; `npm publish`'i GitHub Actions çalıştırır. Sebebi
+provenance: npm, paketi Actions içinde derlerken Sigstore ile imzalı bir köken
+belgesi üretiyor ve npm sayfasında "Provenance" olarak gösteriyor — tarball'ın
+gerçekten bu repodaki bu commit'ten üretildiğinin, elle taklit edilemeyen
+kanıtı. Kendi makinenden yayınlarsan o mühür olmaz.
+
+```bash
+npm version minor -m "Sürüm %s"   # package.json + etiket
+git push origin main --follow-tags
+```
+
+Etiket itilince `Yayınla` workflow'u çalışır: sürümün etiketle uyuştuğunu
+doğrular, tip kontrolü + derleme + testleri koşar, sonra
+`npm publish --provenance` ile yayınlar.
+
+### İlk kurulum: NPM_TOKEN
+
+Deponun `NPM_TOKEN` secret'ı olmalı. **Classic Token → Automation** tipinde
+olması gerekiyor:
+
+- *Granular* veya *read-only* token, kimlik doğrulamasını geçer ama yayında
+  `npm error 404 PUT` alırsın. Bu hata "paket yok" demek değil, **"yazma
+  yetkin yok"** demektir — npm paketin varlığını sızdırmamak için 404 döner.
+- *Automation* tipi tek kullanımlık şifre (OTP) sormaz; CI için olan budur.
+
+Token'ı secret'a yazarken içeriğini bir yere yapıştırma, panodan boru ile geçir:
+
+```bash
+pbpaste | gh secret set NPM_TOKEN -R tunaarikaya/magaza-mcp
+```
+
+> `gh secret set`'i TTY olmayan bir kabuktan (örneğin bir yapay zekâ ajanının
+> içinden) argümansız çalıştırırsan **hiçbir şey sormaz ve secret'ı boş
+> kaydeder.** Sonraki yayın `ENEEDAUTH` ile düşer. Workflow artık bunu en
+> baştan yakalayıp açıkça söylüyor.
+
 ## Hata ve öneriler
 
 Hata bildirimi ve özellik isteği için issue formlarını kullanın. Güvenlik

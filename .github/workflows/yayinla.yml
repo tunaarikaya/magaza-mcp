@@ -49,6 +49,30 @@ jobs:
           cache: npm
           registry-url: "https://registry.npmjs.org"
 
+      # Token sorunları en sona, yayın adımına kalırsa "ENEEDAUTH" ya da
+      # "404 PUT" gibi hiçbir şey anlatmayan hatalarla karşılaşılıyor. İkisini
+      # de burada, daha derlemeye başlamadan yakalıyoruz.
+      - name: Token var mı?
+        env:
+          JETON: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$JETON" ]; then
+            echo "::error::NPM_TOKEN secret'ı boş ya da hiç tanımlı değil."
+            echo "npm → Tokens → Classic Token → Automation üret, sonra:"
+            echo "    pbpaste | gh secret set NPM_TOKEN -R ${{ github.repository }}"
+            echo "Not: 'gh secret set'i TTY olmayan bir kabuktan (ör. bir ajanın"
+            echo "içinden) çalıştırırsan hiç sormaz ve secret'ı BOŞ kaydeder."
+            exit 1
+          fi
+          echo "Token bulundu (${#JETON} karakter)."
+
+      - name: Token kime ait?
+        # Yalnızca kimlik doğrular. Yetkisi yetersizse yayın adımında npm
+        # "404 PUT" döner; o hata "paket yok" değil, "yazma yetkin yok" demektir.
+        run: npm whoami
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Bağımlılıkları yükle
         run: npm ci
 
