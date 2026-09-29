@@ -33,6 +33,8 @@
 
 # --- Kaynak ve derleme girdileri ---
 src/
+test/
+dist/test/
 scripts/
 tsconfig.json
 *.tsbuildinfo

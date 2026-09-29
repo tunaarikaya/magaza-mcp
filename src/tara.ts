@@ -18,7 +18,7 @@ import { join } from "node:path";
 const kisalt = (yol: string) => yol.replace(homedir(), "~");
 
 /** Alışılmış konumlar. Sıra önemli: ilk sıradakiler daha olası. */
-function kokler(): string[] {
+export function kokler(): string[] {
   const ev = homedir();
   return [
     join(ev, "Downloads"),
@@ -79,8 +79,13 @@ export type Bulgu = {
   proje?: string;
 };
 
-/** Alışılmış klasörleri tarar, bulunan anahtar dosyalarını döndürür. */
-export function tara(): Bulgu[] {
+/**
+ * Verilen klasörleri tarar, bulunan anahtar dosyalarını döndürür.
+ *
+ * Kökleri dışarıdan alıyor olması testler için: gerçek ev dizinini taramadan
+ * sınıflandırma mantığı sınanabiliyor.
+ */
+export function taraKokler(baslangic: string[]): Bulgu[] {
   const bulgular: Bulgu[] = [];
   const gorulen = new Set<string>();
   let sayac = 0;
@@ -118,7 +123,7 @@ export function tara(): Bulgu[] {
     }
   };
 
-  for (const kok of kokler()) gez(kok, 0);
+  for (const kok of baslangic) gez(kok, 0);
 
   // Önce doğru türdekiler, sonra en yeni: aradığımız çoğu zaman en üsttedir.
   bulgular.sort((a, b) => {
@@ -126,6 +131,11 @@ export function tara(): Bulgu[] {
     return b.degistirilme.localeCompare(a.degistirilme);
   });
   return bulgular;
+}
+
+/** Alışılmış klasörleri tarar. */
+export function tara(): Bulgu[] {
+  return taraKokler(kokler());
 }
 
 /** Tek bir dosyaya bakar. Anahtar değilse null döner. */

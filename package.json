@@ -12,7 +12,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
+    "dist/src",
     "spec",
     "README.md",
     "AGENTS.md",
@@ -32,6 +32,7 @@
     "build": "npm run temizle && tsc && node scripts/kopyala-katalog.mjs",
     "dev": "tsc --watch",
     "kontrol": "tsc --noEmit",
+    "test": "npm run build && node --test dist/test/*.test.js",
     "spec:guncelle": "node scripts/spec-guncelle.mjs",
     "prepublishOnly": "npm run build"
   },

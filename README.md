@@ -6,9 +6,8 @@
 Yapay zekâ asistanın iki mağazayı da yönetsin.
 
 [![npm](https://img.shields.io/npm/v/magaza-mcp.svg?color=cb3837&label=npm)](https://www.npmjs.com/package/magaza-mcp)
-[![Kurulum](https://img.shields.io/npm/dt/magaza-mcp.svg?color=2d6cdf&label=toplam%20kurulum)](https://www.npmjs.com/package/magaza-mcp)
+[![CI](https://github.com/tunaarikaya/magaza-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/tunaarikaya/magaza-mcp/actions/workflows/ci.yml)
 [![Yıldız](https://img.shields.io/github/stars/tunaarikaya/magaza-mcp?color=f5a623&label=y%C4%B1ld%C4%B1z)](https://github.com/tunaarikaya/magaza-mcp/stargazers)
-[![Ziyaret](https://visitor-badge.laobi.icu/badge?page_id=tunaarikaya.magaza-mcp&left_text=ziyaret)](https://github.com/tunaarikaya/magaza-mcp)
 [![Lisans](https://img.shields.io/badge/lisans-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 

@@ -40,3 +40,6 @@ jobs:
 
       - name: Derle
         run: npm run build
+
+      - name: Testler
+        run: node --test dist/test/*.test.js

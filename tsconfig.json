@@ -15,6 +15,6 @@
     "sourceMap": false
   },
   // scripts/ altındakiler .mjs; tsc'nin işi değiller, bilerek dışarıda.
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": ["node_modules", "dist", "scripts"]
 }
