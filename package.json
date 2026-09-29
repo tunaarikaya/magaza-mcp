@@ -1,6 +1,6 @@
 {
   "name": "magaza-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "App Store Connect ve Google Play'i tek MCP sunucusunda birleştirir. Yapay zekâ asistanın iki mağazayı da yönetsin.",
   "type": "module",
   "bin": {
