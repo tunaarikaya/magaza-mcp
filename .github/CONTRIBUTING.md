@@ -92,13 +92,19 @@ doğrular, tip kontrolü + derleme + testleri koşar, sonra
 
 ### İlk kurulum: NPM_TOKEN
 
-Deponun `NPM_TOKEN` secret'ı olmalı. **Classic Token → Automation** tipinde
-olması gerekiyor:
+Deponun `NPM_TOKEN` secret'ı olmalı. npm → **Access Tokens → Generate New
+Token → Granular Access Token** (eski "Classic / Automation" token türü
+kaldırıldı; artık tek seçenek bu). Formda üç şey doğru olmalı:
 
-- *Granular* veya *read-only* token, kimlik doğrulamasını geçer ama yayında
-  `npm error 404 PUT` alırsın. Bu hata "paket yok" demek değil, **"yazma
-  yetkin yok"** demektir — npm paketin varlığını sızdırmamak için 404 döner.
-- *Automation* tipi tek kullanımlık şifre (OTP) sormaz; CI için olan budur.
+| Alan | Değer | Yanlışsa ne olur |
+|---|---|---|
+| **Bypass two-factor authentication (2FA)** | işaretli | CI tek kullanımlık şifre ister, yayın `EOTP` ile düşer |
+| **Permissions** | `Read and write (publish and stage)` | `npm error 404 PUT` |
+| **Select packages** | `All packages` ya da `magaza-mcp` seçili | `npm error 404 PUT` |
+
+`404 PUT` hatası "paket yok" demek değildir: npm, paketin varlığını
+sızdırmamak için yetkisiz yayın denemelerine de 404 döner. Yani o hatayı
+görüyorsan token geçerlidir, sadece yazma yetkisi yoktur.
 
 Token'ı secret'a yazarken içeriğini bir yere yapıştırma, panodan boru ile geçir:
 

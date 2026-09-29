@@ -58,7 +58,11 @@ jobs:
         run: |
           if [ -z "$JETON" ]; then
             echo "::error::NPM_TOKEN secret'ı boş ya da hiç tanımlı değil."
-            echo "npm → Tokens → Classic Token → Automation üret, sonra:"
+            echo "npm → Access Tokens → Granular Access Token üret:"
+            echo "  · Bypass two-factor authentication (2FA) işaretli"
+            echo "  · Permissions: Read and write (publish and stage)"
+            echo "  · Select packages: All packages ya da magaza-mcp"
+            echo "Sonra:"
             echo "    pbpaste | gh secret set NPM_TOKEN -R ${{ github.repository }}"
             echo "Not: 'gh secret set'i TTY olmayan bir kabuktan (ör. bir ajanın"
             echo "içinden) çalıştırırsan hiç sormaz ve secret'ı BOŞ kaydeder."
