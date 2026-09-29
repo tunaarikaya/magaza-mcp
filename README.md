@@ -6,11 +6,17 @@
 Yapay zekâ asistanın iki mağazayı da yönetsin.
 
 [![npm](https://img.shields.io/npm/v/magaza-mcp.svg?color=cb3837&label=npm)](https://www.npmjs.com/package/magaza-mcp)
+[![Kurulum](https://img.shields.io/npm/dt/magaza-mcp.svg?color=2d6cdf&label=toplam%20kurulum)](https://www.npmjs.com/package/magaza-mcp)
+[![Yıldız](https://img.shields.io/github/stars/tunaarikaya/magaza-mcp?color=f5a623&label=y%C4%B1ld%C4%B1z)](https://github.com/tunaarikaya/magaza-mcp/stargazers)
+[![Ziyaret](https://visitor-badge.laobi.icu/badge?page_id=tunaarikaya.magaza-mcp&left_text=ziyaret)](https://github.com/tunaarikaya/magaza-mcp)
 [![Lisans](https://img.shields.io/badge/lisans-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 
-```bash
-npx magaza-mcp kur
+**Kurmak için terminale hiçbir şey yazmıyorsun.**
+Yapay zekâ asistanına şu satırı at, gerisini o halleder:
+
+```
+https://github.com/tunaarikaya/magaza-mcp — bunu kur, AGENTS.md'yi oku
 ```
 
 </div>
@@ -51,8 +57,8 @@ Google ile konuşur, anahtarın Anahtar Zinciri'nden dışarı çıkmaz.
 | | |
 | --- | --- |
 | [🎯 Neden bu var?](#-neden-bu-var) | Tek mağazalı sunucularla farkı |
-| [⚡ Kurulum](#-kurulum) | Tek komut |
-| [🤖 Yapay zekâya kurdurmak](#-yapay-zekâya-kurdurmak) | Repo linkini asistanına ver, gerisini o yapsın |
+| [⚡ Kurulum](#-kurulum) | Asistanına yaptır — sen komut yazmıyorsun |
+| [🧑‍💻 Elle kurulum](#-elle-kurulum) | Asistan kullanmıyorsan |
 | [🧩 İki mağaza karışır mı?](#-iki-mağaza-karışır-mı) | Hayır — nedeni burada |
 | [💬 Ne sorabilirsin](#-ne-sorabilirsin) | Örnek komutlar |
 | [🧰 Araçlar](#-araçlar) | 27 aracın tam listesi |
@@ -82,9 +88,89 @@ sorgulayabilen araçlar ancak böyle mümkün oluyor.**
 
 ## ⚡ Kurulum
 
+Asistanına (Claude Code, Antigravity, Cursor, Codex, Gemini CLI…) bunu yaz:
+
+```
+https://github.com/tunaarikaya/magaza-mcp — bunu kur, AGENTS.md'yi oku
+```
+
+Asistan [AGENTS.md](AGENTS.md)'yi okur ve kurulumun tamamını üstlenir. Senin
+yapman gereken tek şey sorularına cevap vermek:
+
+```
+Sen  › https://github.com/tunaarikaya/magaza-mcp — bunu kur, AGENTS.md'yi oku
+
+Asistan › Anahtarlarını makinende arıyorum...
+
+          Makinende iki anahtar buldum:
+            App Store : ~/Downloads/AuthKey_ABC123DEFG.p8   (Key ID ABC123DEFG)
+            Play      : ~/.config/play/hesap.json           (yayin@proje.iam...)
+
+          Bunları kullanayım mı? Başka bir dosya varsa yolunu söyle,
+          ya da anahtarı kopyalayıp bana at — ikisi de olur.
+
+Sen  › evet, kullan
+
+Asistan › App Store için Issuer ID lazım. App Store Connect → Kullanıcılar ve
+          Erişim → Entegrasyonlar sayfasında, anahtar listesinin üstündeki UUID.
+
+Sen  › 69a6de70-0000-0000-0000-000000000000
+
+Asistan › ✓ App Store Connect bağlandı — 4 uygulama görüldü
+          ✓ Google Play bağlandı — 3 uygulama görüldü
+          ✓ Claude Code ve Antigravity ayarlarına kaydedildi
+
+          Claude Code'u yeniden başlat, sonra şunu sor:
+          "İki mağazadaki uygulamalarımı listele"
+```
+
+**Anahtarını bulamazsa** ne yapacağını sorar: dosyanın yolunu söylersin,
+panona kopyalarsın, ya da anahtarın hiç yoksa nereden alacağını adım adım
+anlatır.
+
+> [!IMPORTANT]
+> **Anahtarının içeriğini asistan görmez.** Kurulumu o yapar ama komutlar
+> dosyanın yolunu alır, içeriğini kendileri okuyup doğrudan Anahtar Zinciri'ne
+> yazar. Anahtarı panondan verdiğinde bile (`pbpaste | …`) içerik borudan
+> geçer, asistanın bağlamına girmez. AGENTS.md bunu asistana açıkça söyler.
+
+Kurulumdan sonra açık olan uygulamaları yeniden başlat — MCP sunucuları
+yalnızca açılışta yüklenir.
+
+<details>
+<summary><b>Desteklenen istemciler ve ayar dosyaları</b></summary>
+
+<br>
+
+| İstemci | Ayar dosyası |
+| --- | --- |
+| Claude Code | `~/.claude.json` |
+| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Antigravity (IDE + CLI) | `~/.gemini/config/mcp_config.json` |
+| Cursor | `~/.cursor/mcp.json` |
+| Windsurf | `~/.codeium/windsurf/mcp_config.json` |
+| Codex | `~/.codex/config.toml` |
+
+Mevcut ayarlarına dokunulmaz — yalnızca `magaza-mcp` girdisi eklenir veya
+güncellenir, her yazmadan önce `.magaza-mcp-yedek` kopyası alınır ve yazma
+atomik yapılır.
+
+</details>
+
+---
+
+## 🧑‍💻 Elle kurulum
+
+Asistan kullanmıyorsan sihirbaz aynı işi yapar:
+
 ```bash
 npx magaza-mcp kur
 ```
+
+<details>
+<summary><b>Sihirbaz ne soruyor?</b></summary>
+
+<br>
 
 ```
   Mağaza MCP kurulumu
@@ -115,21 +201,8 @@ npx magaza-mcp kur
      Antigravity (IDE + CLI)? [E/h] e
      Cursor? [e/H] h
 
-     ✓ Claude Code                ~/.claude.json
-     ✓ Antigravity (IDE + CLI)    ~/.gemini/config/mcp_config.json
-
   Kurulum tamam.
-
-  Bağlanan mağazalar : App Store Connect + Google Play
-  Anahtarların yeri  : macOS Anahtar Zinciri
-  Kurulan uygulama   : 2
-
-  Açık olan uygulamaları yeniden başlat, sonra şunu sor:
-
-    "İki mağazadaki uygulamalarımı listele"
 ```
-
-Sihirbaz sırasıyla sorar:
 
 | # | Soru | Not |
 | --- | --- | --- |
@@ -139,59 +212,46 @@ Sihirbaz sırasıyla sorar:
 | 4 | Hangi istemcilere? | Makinende kurulu görünenler işaretli gelir |
 | 5 | Salt-okunur olsun mu? | Varsayılan hayır |
 
+</details>
+
 **Anahtarların ayar dosyasına yazılmaz.** macOS'ta Anahtar Zinciri'ne kaydedilir;
 ayar dosyasına yalnızca hangi mağazaların açık olduğu (`MAGAZALAR`) girer.
 Anahtar Zinciri'ne erişilemeyen sistemlerde izinleri `0600` olan bir dosyaya
 düşülür.
 
 <details>
-<summary><b>Desteklenen istemciler ve ayar dosyaları</b></summary>
+<summary><b>Bütün komutlar</b></summary>
 
 <br>
 
-| İstemci | Ayar dosyası |
-| --- | --- |
-| Claude Code | `~/.claude.json` |
-| Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Antigravity (IDE + CLI) | `~/.gemini/config/mcp_config.json` |
-| Cursor | `~/.cursor/mcp.json` |
-| Windsurf | `~/.codeium/windsurf/mcp_config.json` |
-| Codex | `~/.codex/config.toml` |
-
-Mevcut ayarlarına dokunulmaz — yalnızca `magaza-mcp` girdisi eklenir veya
-güncellenir, her yazmadan önce `.magaza-mcp-yedek` kopyası alınır ve yazma
-atomik yapılır.
-
-</details>
-
-Kurulumdan sonra açık olan uygulamaları yeniden başlat.
-
-**Diğer komutlar:**
-
 ```bash
+npx magaza-mcp tara        # Makinede .p8 ve servis hesabı anahtarı ara
+npx magaza-mcp anahtar ... # Anahtarı doğrula ve kasaya yaz (aşağıda)
+npx magaza-mcp kaydet      # Sunucuyu istemcilerin ayarlarına ekle
 npx magaza-mcp durum       # Neyin bağlı olduğunu göster (--json ile makine okunur)
 npx magaza-mcp araclar     # Yüklü araçları listele (✎ = veri değiştirebilir)
+npx magaza-mcp kur         # Elle kurulum sihirbazı
 npx magaza-mcp surum       # Sürümü yazdır
 npx magaza-mcp yardim      # Yardım
 ```
 
----
+Anahtar kaydı (sihirbazın soru-cevap kısmının komut karşılığı):
 
-## 🤖 Yapay zekâya kurdurmak
+```bash
+npx magaza-mcp anahtar --apple-p8 ~/Downloads/AuthKey_ABC123DEFG.p8 \
+  --issuer-id 69a6de70-0000-0000-0000-000000000000
 
-Terminalle uğraşmak istemiyorsan asistanına yaptır. Kullandığın yapay zekâya
-(Claude Code, Antigravity, Cursor, Codex…) şunu yaz:
+npx magaza-mcp anahtar --play-json ~/.config/play/hesap.json
 
-> `https://github.com/tunaarikaya/magaza-mcp` — bunu kur, AGENTS.md'yi oku
+pbpaste | npx magaza-mcp anahtar --play-json -   # panodan, dosya olmadan
+npx magaza-mcp anahtar --sil appstore            # kasadan sil
+```
 
-Asistan [AGENTS.md](AGENTS.md)'yi okuyup gerisini halleder: paketi tanır, ayar
-dosyalarına kaydeder, kurulumu doğrular.
+`--key-id` verilmezse dosya adından okunur. Anahtar, Apple/Google'a gerçek bir
+istek atılarak doğrulanmadan kasaya yazılmaz; doğrulama başarısızsa kasadaki
+eski anahtar olduğu gibi kalır.
 
-> [!IMPORTANT]
-> **Anahtarını asistan görmez.** Kayıt işini o yapar, ama anahtar girme kısmını
-> sana bırakır — `npx magaza-mcp kur` komutunu sen çalıştırırsın ve anahtar
-> bilgisayarından hiç çıkmaz. AGENTS.md asistana bunu açıkça söyler: `.p8`
-> dosyanı isteme, okuma, ekrana basma.
+</details>
 
 ---
 
@@ -396,6 +456,11 @@ analitik raporlar daha yüksek yetki ister.
 - **Anahtarlar Anahtar Zinciri'nde.** Apple `.p8` ve Google servis hesabı JSON'u
   macOS Anahtar Zinciri'nde saklanır; ayar dosyalarına, ortam değişkenlerine
   veya repoya yazılmaz.
+- **Kurulumu asistan yapsa bile anahtarı görmez.** `anahtar` komutu dosyanın
+  yolunu alır, içeriği kendisi okur ve doğrudan kasaya yazar; panodan verilen
+  anahtar da borudan geçer. Anahtarın içeriği hiçbir komutun çıktısında
+  görünmez — `durum` yalnızca Key ID'nin son dört hanesini, `tara` yalnızca
+  dosya yollarını basar.
 - **Veri değiştiren işlemler onay ister.** Yazma araçları ilk seferde çalışmaz:
   ne yapılacağını ve beklenen gövdeyi döndürürler; işlem ancak kullanıcı
   onayladıktan sonra `onayla=true` ile tekrarlandığında yürür. Bu **sunucu

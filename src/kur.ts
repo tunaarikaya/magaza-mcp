@@ -10,11 +10,8 @@ import { join, resolve } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { stdin, stdout } from "node:process";
 
-import {
-  onbellegiTemizle as appleOnbellegiTemizle,
-  tokenUret,
-  type AppleKimlik,
-} from "./kimlik/apple.js";
+import { onbellegiTemizle as appleOnbellegiTemizle, type AppleKimlik } from "./kimlik/apple.js";
+import { appleDogrula, playDogrula } from "./dogrula.js";
 import { kasaNerede, yaz } from "./kimlik/kasa.js";
 import { ISTEMCILER, kur as istemcilereKur, kuruluMu, sunucuGirdisi } from "./istemciler.js";
 
@@ -172,7 +169,10 @@ export async function kurulumSihirbazi(): Promise<void> {
         return;
       }
 
-      console.log(`${tik} ${soluk(`${sonuc.adet} uygulama görüldü`)}`);
+      console.log(
+        `${tik} ${soluk(sonuc.adet === undefined ? "bağlantı kuruldu" : `${sonuc.adet} uygulama görüldü`)}`,
+      );
+      if (sonuc.uyari) console.log(`     ${sari("!")} ${sonuc.uyari}`);
       console.log(`     ${tik} Anahtar kaydedildi ${soluk(`(${kasaNerede()})`)}`);
       console.log();
 
@@ -250,76 +250,4 @@ export async function kurulumSihirbazi(): Promise<void> {
   } finally {
     ara.close();
   }
-}
-
-/* ---------------- doğrulayıcılar ---------------- */
-
-async function appleDogrula(
-  kimlik: AppleKimlik,
-): Promise<{ tamam: boolean; adet?: number; mesaj?: string }> {
-  let token: string;
-  try {
-    token = tokenUret(kimlik);
-  } catch {
-    return {
-      tamam: false,
-      mesaj:
-        ".p8 dosyası imzalama için kullanılamadı. Dosya bozuk olabilir veya " +
-        "App Store Connect anahtarı değil (örn. bir StoreKit anahtarı olabilir).",
-    };
-  }
-
-  const yanit = await fetch(
-    "https://api.appstoreconnect.apple.com/v1/apps?limit=200",
-    { headers: { authorization: `Bearer ${token}` } },
-  );
-
-  if (yanit.status === 401) {
-    return {
-      tamam: false,
-      mesaj:
-        "Apple anahtarı kabul etmedi. Key ID, Issuer ID ve .p8 dosyası " +
-        "birbirine ait mi? Bilgisayarın saati doğru mu?",
-    };
-  }
-  if (!yanit.ok) {
-    return { tamam: false, mesaj: `Apple ${yanit.status} döndü: ${(await yanit.text()).slice(0, 200)}` };
-  }
-
-  const veri: any = await yanit.json();
-  return { tamam: true, adet: (veri.data || []).length };
-}
-
-async function playDogrula(): Promise<{ tamam: boolean; adet?: number; mesaj?: string }> {
-  // Kasaya az önce yazdık; modül önbelleğini atlamak için taze içe aktarım.
-  const { gecerliToken, onbellegiTemizle } = await import("./kimlik/google.js");
-  onbellegiTemizle();
-
-  let token: string;
-  try {
-    token = await gecerliToken();
-  } catch (h) {
-    return { tamam: false, mesaj: h instanceof Error ? h.message : String(h) };
-  }
-
-  const yanit = await fetch(
-    "https://playdeveloperreporting.googleapis.com/v1beta1/apps:search?pageSize=200",
-    { headers: { authorization: `Bearer ${token}` } },
-  );
-
-  if (yanit.status === 403) {
-    return {
-      tamam: false,
-      mesaj:
-        "Google yetki vermedi. Servis hesabı Play Console'a davet edildi mi ve " +
-        "izinleri verildi mi? Ayrıca Cloud projesinde Android Publisher API ve " +
-        "Play Developer Reporting API açık olmalı.",
-    };
-  }
-  if (!yanit.ok) {
-    return { tamam: false, mesaj: `Google ${yanit.status} döndü: ${(await yanit.text()).slice(0, 200)}` };
-  }
-
-  const veri: any = await yanit.json();
-  return { tamam: true, adet: (veri.apps || []).length };
 }

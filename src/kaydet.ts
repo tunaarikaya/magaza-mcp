@@ -5,8 +5,8 @@
  * istemcilerin ayar dosyalarına yazarlar ve neyin bağlı olduğunu raporlarlar,
  * ama hiçbir kimlik bilgisi istemezler ve hiçbir anahtarı ekrana basmazlar.
  *
- * Anahtar girme işi kullanıcının kendisine ait: `magaza-mcp kur`. Böylece özel
- * anahtar ajanın bağlamına hiç düşmez.
+ * Anahtarın kendisi ayrı bir komutla girilir (`magaza-mcp anahtar`); orada da
+ * yalnızca dosyanın yolu dolaşır, içeriği ajanın bağlamına hiç düşmez.
  */
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -95,8 +95,9 @@ export function kaydetKomutu(): void {
   if (eksikler.length) {
     console.log();
     console.log(`  Eksik kimlik bilgisi: ${eksikler.join(", ")}`);
-    console.log("  Kullanıcının kendisi şunu çalıştırmalı:  npx magaza-mcp kur");
-    console.log("  (Anahtar yalnızca kullanıcının makinesinde kalır.)");
+    console.log("  Anahtarı makinede ara:  npx magaza-mcp tara");
+    console.log("  Bulduğunu kaydet     :  npx magaza-mcp anahtar --apple-p8 <yol> --issuer-id <ID>");
+    console.log("                          npx magaza-mcp anahtar --play-json <yol>");
   }
 
   console.log();

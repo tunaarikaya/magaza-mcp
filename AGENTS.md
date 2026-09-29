@@ -1,53 +1,139 @@
 # Yapay zekâ ajanları için kurulum talimatı
 
-Bu dosya, `magaza-mcp`'yi bir kullanıcı adına kuran yapay zekâ ajanları içindir
+Bu dosya `magaza-mcp`'yi bir kullanıcı adına kuran yapay zekâ ajanları içindir
 (Claude Code, Antigravity, Cursor, Codex, Gemini CLI ve benzerleri).
 
-Kullanıcı sana bu reponun linkini verdiyse yapman gereken aşağıda.
+Kullanıcı sana bu reponun linkini verdiyse **kurulumun tamamı sana ait.**
+Kullanıcıya terminale komut yazdırma, dosya açtırma, JSON düzenletme. Sen
+yaparsın, o yalnızca sorularına cevap verir.
+
 **Tamamını oku, sonra sırayla uygula.**
 
 ---
 
-## Altın kural: özel anahtarı sen görmeyeceksin
+## Tek kural: anahtarın İÇERİĞİ senin bağlamına girmesin
 
-İş bölümü nettir:
+Kurulumu sen yaparsın ama `.p8` dosyasının veya servis hesabı JSON'unun
+içeriğini okumana gerek yok — çünkü komutlar dosyanın **yolunu** alır, içeriği
+kendileri okur ve doğrudan Anahtar Zinciri'ne yazar.
 
-| Kim | Ne yapar |
+| Serbest | Yasak |
 |---|---|
-| **Sen (ajan)** | Sunucuyu istemcilerin ayar dosyalarına kaydedersin, durumu doğrularsın |
-| **Kullanıcı** | Anahtarı kendisi girer: `npx magaza-mcp kur` |
+| Dosyanın **yolu** (`~/Downloads/AuthKey_ABC123.p8`) | Dosyanın **içeriği** (`-----BEGIN PRIVATE KEY-----…`) |
+| Key ID, Issuer ID (gizli değil, UUID ve 10 haneli kod) | `private_key` alanının değeri |
+| Servis hesabının e-postası, proje adı | JSON'un tamamını okuyup ekrana basmak |
 
-Kullanıcıdan Key ID, Issuer ID, `.p8` dosyasının içeriği veya servis hesabı
-JSON'u **isteme**. Bu dosyaları okuma, terminale bastırma, başka bir dosyaya
-kopyalama. Anahtarlar kullanıcının Anahtar Zinciri'nde durur ve senin
-bağlamına hiç girmemelidir — bir kez bağlamına girerse oturum kaydına,
-günlüklere ve özetlere sızar.
+Sebebi: bağlamına giren her şey oturum kaydına, günlüklere ve özetlere sızar.
+Yol sızarsa bir şey olmaz, anahtar sızarsa kullanıcı anahtarını iptal etmek
+zorunda kalır.
 
-Kullanıcı ısrar edip anahtarı yapıştırırsa: kullanma, kaydetme, "anahtarını
-sohbete yapıştırdın, bunu iptal edip yenisini üretmen daha güvenli olur" de.
+Kullanıcı anahtarı yine de sohbete yapıştırırsa: kullan ama kurulum biter
+bitmez **"anahtarını sohbete yapıştırdın, bunu iptal edip yenisini üretmen
+daha güvenli olur"** de.
 
 ---
 
-## Adım 1 — Neyin kurulu olduğuna bak
+## Akış
+
+### Adım 1 — Neyin kurulu olduğuna bak
 
 ```bash
 npx -y magaza-mcp durum --json
 ```
 
-Sana şunu döndürür: her mağaza için anahtar var mı, bağlantı çalışıyor mu,
-hangi istemcilere kayıtlı. Anahtarın kendisi çıktıda **yoktur**; yalnızca
-Key ID'nin son dört hanesi görünür.
+Her mağaza için anahtar var mı, bağlantı çalışıyor mu, hangi istemcilere
+kayıtlı — hepsi çıktıda. Anahtarın kendisi **yoktur**; Key ID'nin yalnızca son
+dört hanesi görünür.
 
-## Adım 2 — Sunucuyu kaydet
+İkisi de `tamam` dönüyorsa kurulum zaten tamamdır; adım 4'e geç.
 
-Bu komut kimlik bilgisi istemez, soru sormaz, hiçbir şey okumaz:
+### Adım 2 — Anahtarı bul
+
+Kullanıcıya anahtarını sormadan önce **makinesinde ara.** Çoğu zaman zaten
+indirmiştir, sadece nerede olduğunu bilmez:
+
+```bash
+npx -y magaza-mcp tara --json
+```
+
+Alışılmış klasörleri (İndirilenler, Masaüstü, Belgeler, `~/.config`,
+`~/.appstoreconnect/private_keys`, bulunduğun proje klasörü) üç seviye derinlikte
+tarar, saniyeler sürer. Her bulgu şöyle döner:
+
+```json
+{
+  "bulgular": [
+    { "tur": "appstore", "yol": "/Users/x/Downloads/AuthKey_ABC123DEFG.p8",
+      "guven": "yuksek", "key_id": "ABC123DEFG", "degistirilme": "2026-09-20" },
+    { "tur": "play", "yol": "/Users/x/.config/play/hesap.json",
+      "guven": "yuksek", "servis_hesabi": "yayin@proje.iam.gserviceaccount.com",
+      "proje": "proje", "degistirilme": "2026-08-02" }
+  ]
+}
+```
+
+`guven: "dusuk"` olanları kullanıcıya sormadan kullanma — `uyari` alanında
+sebebi yazar (StoreKit anahtarı olabilir, Firebase servis hesabı olabilir).
+
+**Kullanıcıya böyle sor** (bulgu varsa):
+
+> Makinende iki anahtar buldum:
+> - App Store: `~/Downloads/AuthKey_ABC123DEFG.p8` (Key ID ABC123DEFG, 20 Eylül)
+> - Play: `~/.config/play/hesap.json` (yayin@proje.iam.gserviceaccount.com)
+>
+> Bunları kullanayım mı? Başka bir dosya varsa yolunu söyle, ya da anahtarı
+> kopyalayıp bana at — ikisi de olur.
+
+**Hiç bulgu yoksa** kullanıcıya üç seçenek sun:
+
+> Anahtarını bulamadım. Üç yoldan biriyle ilerleyebiliriz:
+> 1. Dosyanın yerini biliyorsan yolunu söyle, gerisini ben hallederim.
+> 2. Dosyayı panona kopyala, "kopyaladım" de — içeriğini görmeden kaydederim.
+> 3. Henüz anahtarın yoksa nereden alacağını adım adım anlatayım.
+
+### Adım 3 — Anahtarı kaydet
+
+Dosya yolunu biliyorsan tek komut. Anahtar önce Apple/Google'a gerçek bir istek
+atılarak doğrulanır, geçmezse kasaya **yazılmaz**:
+
+```bash
+npx -y magaza-mcp anahtar --apple-p8 "/Users/x/Downloads/AuthKey_ABC123DEFG.p8" \
+  --issuer-id 69a6de70-0000-0000-0000-000000000000
+
+npx -y magaza-mcp anahtar --play-json "/Users/x/.config/play/hesap.json"
+```
+
+- `--key-id` vermezsen dosya adından okunur (`AuthKey_XXXX.p8`). Okunamazsa
+  komut sana söyler, o zaman kullanıcıdan iste.
+- `--issuer-id` her zaman gerekir. Gizli değildir; App Store Connect →
+  Kullanıcılar ve Erişim → Entegrasyonlar sayfasında anahtar listesinin üstünde
+  yazan UUID'dir. Kullanıcıdan istemekte sakınca yok.
+- `--json` eklersen makine okunur çıktı alırsın.
+
+**Kullanıcı "sana atayım" derse** anahtarı sohbete yapıştırtma; panosuna
+kopyalatıp boru hattından geçir. İçerik senin bağlamına girmeden kasaya gider:
+
+```bash
+pbpaste | npx -y magaza-mcp anahtar --play-json -          # macOS
+pbpaste | npx -y magaza-mcp anahtar --apple-p8 - --key-id ABC123DEFG --issuer-id <UUID>
+```
+
+Linux'ta `xclip -o` veya `wl-paste` kullanılır. Kullanıcı dosyayı bir yere
+sürükleyip bıraktıysa (çoğu istemci dosya yolunu mesaja yazar) o yolu doğrudan
+`--apple-p8` / `--play-json` ile ver.
+
+Yanlış anahtar verilirse kasadaki eskisi bozulmaz: Apple tarafında doğrulama
+yazmadan önce yapılır, Play tarafında başarısızlıkta eski değer geri konur.
+
+### Adım 4 — Sunucuyu istemcilere kaydet
+
+Bu komut kimlik bilgisi istemez, soru sormaz:
 
 ```bash
 npx -y magaza-mcp kaydet --magazalar appstore,play
 ```
 
-Kullanıcı yalnızca bir mağaza kullanıyorsa onu ver — diğerinin araçları hiç
-yüklenmez:
+Kullanıcı tek mağaza kullanıyorsa onu ver — diğerinin araçları hiç yüklenmez:
 
 ```bash
 npx -y magaza-mcp kaydet --magazalar play
@@ -60,11 +146,11 @@ npx -y magaza-mcp kaydet --magazalar appstore,play --istemci claude-code,antigra
 ```
 
 Geçerli istemci anahtarları: `claude-code`, `claude-desktop`, `antigravity`,
-`cursor`, `windsurf`, `codex`. `--istemci` vermezsen makinede kurulu
-görünenlere yazar.
+`cursor`, `windsurf`, `codex`. `--istemci` vermezsen makinede kurulu görünenlere
+yazar.
 
-Kullanıcı "hiçbir şeyi değiştirmesin, sadece okusun" diyorsa
-`--salt-okunur` ekle (bayrak ayar dosyasına da yazılır):
+Kullanıcı "hiçbir şeyi değiştirmesin, sadece okusun" diyorsa `--salt-okunur`
+ekle (bayrak ayar dosyasına da yazılır):
 
 ```bash
 npx -y magaza-mcp kaydet --magazalar appstore,play --salt-okunur
@@ -76,50 +162,64 @@ Bu modda yazma yapan araçlar (`appstore__yorum_yanitla`,
 araçtan gidiliyor — ama veri değiştiren bir operasyon istendiğinde reddeder.
 
 Komut mevcut ayarlara dokunmaz: yalnızca `magaza-mcp` girdisini ekler veya
-günceller, her yazmadan önce `.magaza-mcp-yedek` kopyası alır ve yazmayı
-atomik yapar.
+günceller, her yazmadan önce `.magaza-mcp-yedek` kopyası alır ve yazmayı atomik
+yapar.
 
-## Adım 3 — Anahtarı kullanıcıya girdirt
-
-Bunu sen yapmıyorsun. Kullanıcıya **aynen** şunu söyle:
-
-> Şimdi anahtarını girmen gerekiyor. Terminale şunu yaz:
->
-> ```
-> npx magaza-mcp kur
-> ```
->
-> Sihirbaz hangi mağazaları bağlayacağını sorar, sonra anahtarını ister.
-> Anahtarın bilgisayarından çıkmaz, ben de görmem.
-
-İhtiyaç duyacağı şeyler:
-
-- **App Store Connect:** App Store Connect → Kullanıcılar ve Erişim →
-  Entegrasyonlar → Anahtar üret. **App Manager rolü yeterlidir**, Admin
-  gerekmez. İndirilen `.p8` dosyası bir kez indirilebilir, saklaması gerekir.
-- **Google Play:** Google Cloud Console'da bir servis hesabı ve JSON anahtarı;
-  ardından Play Console → Kullanıcılar ve izinler'den o servis hesabını davet
-  etmesi gerekir. Cloud projesinde **Android Publisher API** ve **Play
-  Developer Reporting API** açık olmalı.
-
-## Adım 4 — Doğrula
+### Adım 5 — Doğrula ve bitir
 
 ```bash
 npx -y magaza-mcp durum
 ```
 
-`✓` görürsen bağlantı çalışıyor. Sonra kullanıcıya istemcisini yeniden
-başlatmasını söyle — MCP sunucuları yalnızca açılışta yüklenir.
+`✓` görürsen bağlantı çalışıyor. Sonra kullanıcıya **istemcisini yeniden
+başlatmasını** söyle — MCP sunucuları yalnızca açılışta yüklenir. Kendi
+üzerinde çalıştığın istemciye kurduysan bunu özellikle belirt: sen yeniden
+başlatamazsın.
 
-Sık karşılaşılan iki çıktı:
+Sık karşılaşılan çıktılar:
 
 - **App Store: anahtar reddedildi** → Key ID, Issuer ID ve `.p8` birbirine ait
   değil, ya da anahtar iptal edilmiş. Sistem saati de kaymış olabilir; imzalı
   token'ın ömrü 20 dakika.
-- **Play: "anahtar geçerli, ancak Play Developer Reporting API Cloud
-  projesinde kapalı"** → Anahtar geçerli, sadece Cloud projesinde o API
-  açılmamış. `play__uygulamalar` ve `play__cokme_orani` bundan etkilenir,
-  diğer Play araçları çalışmaya devam eder.
+- **Play: "anahtar geçerli, ancak Play Developer Reporting API kapalı"** →
+  Anahtar sorunsuz. Yalnızca Cloud projesinde o API açılmamış;
+  `play__uygulamalar` ve `play__cokme_orani` bundan etkilenir, diğer Play
+  araçları çalışır. Kullanıcıya Cloud Console'dan açmasını önerebilirsin.
+
+---
+
+## Kullanıcının anahtarı hiç yoksa
+
+Bunu ona sen anlatacaksın; linkleri ver, adımları say, sonra Adım 2'ye dön.
+
+**App Store Connect:**
+1. [appstoreconnect.apple.com](https://appstoreconnect.apple.com) → Kullanıcılar
+   ve Erişim → Entegrasyonlar → App Store Connect API
+2. `+` ile anahtar üret. **App Manager rolü yeterlidir**, Admin gerekmez.
+3. İnen `.p8` dosyası **yalnızca bir kez** indirilebilir; sakladığı yeri sana
+   söylemesini iste.
+4. Aynı sayfadaki Issuer ID'yi ve anahtarın Key ID'sini de sana versin.
+
+**Google Play:**
+1. [console.cloud.google.com](https://console.cloud.google.com) → servis hesabı
+   oluştur → JSON anahtarı indir.
+2. Aynı projede **Android Publisher API** ve **Play Developer Reporting API**'yi
+   aç.
+3. [Play Console](https://play.google.com/console) → Kullanıcılar ve izinler →
+   o servis hesabının e-postasını davet et, uygulamalara erişim ver.
+4. İzinlerin yayılması birkaç dakika sürebilir; `durum` ilk denemede 403
+   derse biraz bekleyip tekrar dene.
+
+---
+
+## Elle kurulum (sen yoksan)
+
+Kullanıcı ajansız ilerlemek isterse bir sihirbaz var — ona bunu sen önerme,
+yalnızca kullanıcı isterse söyle:
+
+```bash
+npx magaza-mcp kur
+```
 
 ---
 
