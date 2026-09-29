@@ -1,9 +1,20 @@
-# npm yayını — kaynağı kanıtlanabilir (provenance) sürüm.
+# npm yayını — token yok, kaynağı kanıtlanabilir (provenance) sürüm.
 #
-# Paketi burada, GitHub Actions içinde derleyip yayınlıyoruz. npm bu sırada
-# Sigstore ile imzalı bir köken belgesi üretiyor: "bu tarball, bu repodaki bu
-# commit'ten, bu workflow tarafından üretildi". npm sayfasında "Provenance"
-# bölümü olarak görünür ve kimse elle taklit edemez.
+# Yayın "trusted publishing" ile yapılıyor: npm tarafında bu depo ve bu
+# workflow dosyası güvenilir yayıncı olarak tanımlı. GitHub her çalışmada
+# kısa ömürlü, imzalı bir OIDC kimliği üretiyor, npm onu doğrulayıp yayına
+# izin veriyor. Depoda saklanan bir yayın token'ı yok — çalınacak, süresi
+# dolacak, yanlışlıkla sızacak bir sır da yok.
+#
+# Aynı mekanizma provenance belgesini de üretir: npm sayfasındaki
+# "Provenance" bölümü, tarball'ın bu depodaki bu commit'ten, bu workflow
+# tarafından üretildiğini kanıtlar.
+#
+# npm tarafındaki ayar: Packages → magaza-mcp → Settings → Trusted Publisher
+#   Provider: GitHub Actions
+#   Organization or user: tunaarikaya
+#   Repository: magaza-mcp
+#   Workflow filename: yayinla.yml
 #
 # Çalıştırmak için: sürüm etiketi it (npm version minor && git push --follow-tags)
 # veya Actions sekmesinden elle tetikle.
@@ -16,7 +27,7 @@ on:
   workflow_dispatch:
     inputs:
       etiket:
-        description: "Yayınlanacak sürüm etiketi (örn. v0.2.0)"
+        description: "Yayınlanacak sürüm etiketi (örn. v0.2.1)"
         required: true
 
 permissions:
@@ -33,7 +44,7 @@ jobs:
 
     permissions:
       contents: read
-      # Provenance imzası bu izin olmadan üretilemez.
+      # OIDC kimliği bu izin olmadan üretilemez; trusted publishing'in şartı.
       id-token: write
 
     steps:
@@ -49,33 +60,12 @@ jobs:
           cache: npm
           registry-url: "https://registry.npmjs.org"
 
-      # Token sorunları en sona, yayın adımına kalırsa "ENEEDAUTH" ya da
-      # "404 PUT" gibi hiçbir şey anlatmayan hatalarla karşılaşılıyor. İkisini
-      # de burada, daha derlemeye başlamadan yakalıyoruz.
-      - name: Token var mı?
-        env:
-          JETON: ${{ secrets.NPM_TOKEN }}
+      # Trusted publishing npm 11.5.1 ile geldi; Node 22 daha eski bir npm ile
+      # kuruluyor. Eskisiyle yayın "ENEEDAUTH" diye düşer, sebebi de görünmez.
+      - name: npm'i güncelle
         run: |
-          if [ -z "$JETON" ]; then
-            echo "::error::NPM_TOKEN secret'ı boş ya da hiç tanımlı değil."
-            echo "npm → Access Tokens → Granular Access Token üret:"
-            echo "  · Bypass two-factor authentication (2FA) işaretli"
-            echo "  · Permissions: Read and write (publish and stage)"
-            echo "  · Select packages: All packages ya da magaza-mcp"
-            echo "Sonra:"
-            echo "    pbpaste | gh secret set NPM_TOKEN -R ${{ github.repository }}"
-            echo "Not: 'gh secret set'i TTY olmayan bir kabuktan (ör. bir ajanın"
-            echo "içinden) çalıştırırsan hiç sormaz ve secret'ı BOŞ kaydeder."
-            exit 1
-          fi
-          echo "Token bulundu (${#JETON} karakter)."
-
-      - name: Token kime ait?
-        # Yalnızca kimlik doğrular. Yetkisi yetersizse yayın adımında npm
-        # "404 PUT" döner; o hata "paket yok" değil, "yazma yetkin yok" demektir.
-        run: npm whoami
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm install -g npm@latest
+          npm --version
 
       - name: Bağımlılıkları yükle
         run: npm ci
@@ -87,7 +77,7 @@ jobs:
           etiket="${{ github.event.inputs.etiket || github.ref_name }}"
           surum="v$(node -p "require('./package.json').version")"
           if [ "$etiket" != "$surum" ]; then
-            echo "Etiket ($etiket) ile package.json sürümü ($surum) uyuşmuyor."
+            echo "::error::Etiket ($etiket) ile package.json sürümü ($surum) uyuşmuyor."
             exit 1
           fi
           echo "Sürüm doğrulandı: $surum"
@@ -102,6 +92,7 @@ jobs:
         run: node --test dist/test/*.test.js
 
       - name: Yayınla
+        # Token yok: npm, OIDC ortamını kendisi tanıyıp kimliği oradan alır.
+        # ENEEDAUTH alıyorsan npm tarafındaki Trusted Publisher kaydı eksik ya
+        # da bu dosyanın adıyla (yayinla.yml) uyuşmuyordur.
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

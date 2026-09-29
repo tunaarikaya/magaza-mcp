@@ -90,32 +90,31 @@ Etiket itilince `Yayınla` workflow'u çalışır: sürümün etiketle uyuştuğ
 doğrular, tip kontrolü + derleme + testleri koşar, sonra
 `npm publish --provenance` ile yayınlar.
 
-### İlk kurulum: NPM_TOKEN
+### İlk kurulum: trusted publishing
 
-Deponun `NPM_TOKEN` secret'ı olmalı. npm → **Access Tokens → Generate New
-Token → Granular Access Token** (eski "Classic / Automation" token türü
-kaldırıldı; artık tek seçenek bu). Formda üç şey doğru olmalı:
+Depoda yayın token'ı **yok** ve olmamalı. npm, bu depoyu ve `yayinla.yml`
+dosyasını güvenilir yayıncı olarak tanıyor; GitHub her çalışmada kısa ömürlü,
+imzalı bir OIDC kimliği üretiyor ve npm onu doğruluyor. Saklanan uzun ömürlü
+bir sır olmadığı için çalınacak, süresi dolacak ya da yanlışlıkla sızacak bir
+şey de yok. Provenance belgesi de aynı mekanizmadan geliyor.
 
-| Alan | Değer | Yanlışsa ne olur |
-|---|---|---|
-| **Bypass two-factor authentication (2FA)** | işaretli | CI tek kullanımlık şifre ister, yayın `EOTP` ile düşer |
-| **Permissions** | `Read and write (publish and stage)` | `npm error 404 PUT` |
-| **Select packages** | `All packages` ya da `magaza-mcp` seçili | `npm error 404 PUT` |
+npm tarafındaki ayar (bir kez yapılır):
 
-`404 PUT` hatası "paket yok" demek değildir: npm, paketin varlığını
-sızdırmamak için yetkisiz yayın denemelerine de 404 döner. Yani o hatayı
-görüyorsan token geçerlidir, sadece yazma yetkisi yoktur.
+**Packages → magaza-mcp → Settings → Trusted Publisher → GitHub Actions**
 
-Token'ı secret'a yazarken içeriğini bir yere yapıştırma, panodan boru ile geçir:
+| Alan | Değer |
+|---|---|
+| Organization or user | `tunaarikaya` |
+| Repository | `magaza-mcp` |
+| Workflow filename | `yayinla.yml` |
+| Environment | boş |
 
-```bash
-pbpaste | gh secret set NPM_TOKEN -R tunaarikaya/magaza-mcp
-```
+Workflow dosyasının adı değişirse bu kayıt da değişmeli; yoksa yayın
+`ENEEDAUTH` ile düşer.
 
-> `gh secret set`'i TTY olmayan bir kabuktan (örneğin bir yapay zekâ ajanının
-> içinden) argümansız çalıştırırsan **hiçbir şey sormaz ve secret'ı boş
-> kaydeder.** Sonraki yayın `ENEEDAUTH` ile düşer. Workflow artık bunu en
-> baştan yakalayıp açıkça söylüyor.
+> npm'in "Generate New Token → Bypass 2FA" yolu da çalışır ama npm'in kendisi
+> CI için önermiyor: o token uzun ömürlü ve yayın yetkisi taşıyor, sızarsa
+> paketi başkası yayınlayabilir. Trusted publishing'de öyle bir sır yok.
 
 ## Hata ve öneriler
 
