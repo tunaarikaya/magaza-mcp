@@ -2,146 +2,149 @@
 
 # Mağaza MCP
 
-**App Store Connect ve Google Play, tek MCP sunucusunda.**
-Yapay zekâ asistanın iki mağazayı da yönetsin.
+**App Store Connect and Google Play, in one MCP server.**
+Let your AI assistant manage both stores.
 
 [![npm](https://img.shields.io/npm/v/magaza-mcp.svg?color=cb3837&label=npm)](https://www.npmjs.com/package/magaza-mcp)
 [![CI](https://github.com/tunaarikaya/magaza-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/tunaarikaya/magaza-mcp/actions/workflows/ci.yml)
-[![Yıldız](https://img.shields.io/github/stars/tunaarikaya/magaza-mcp?color=f5a623&label=y%C4%B1ld%C4%B1z)](https://github.com/tunaarikaya/magaza-mcp/stargazers)
-[![Lisans](https://img.shields.io/badge/lisans-MIT-blue.svg)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/tunaarikaya/magaza-mcp?color=f5a623&label=stars)](https://github.com/tunaarikaya/magaza-mcp/stargazers)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 
-**Kurmak için terminale hiçbir şey yazmıyorsun.**
-Yapay zekâ asistanına şu satırı at, gerisini o halleder:
+**You don't type anything into a terminal to install this.**
+Drop this line on your AI assistant, it handles the rest:
 
 ```
-https://github.com/tunaarikaya/magaza-mcp — bunu kur, AGENTS.md'yi oku
+https://github.com/tunaarikaya/magaza-mcp — install this, read AGENTS.md
 ```
+
+[Türkçe README](README.tr.md)
 
 </div>
 
 ---
 
-> **Sen:** Nota Defteri'nin aylık aboneliği App Store'da ve Play'de Türkiye'de kaç para?
+> **You:** How much is Nota Defteri's monthly subscription on App Store vs. Play in Turkey?
 >
-> **Asistan:** App Store'da ₺129,99, Play'de ₺99,99. Play tarafı belirgin biçimde
-> daha ucuz — iki mağazada aynı fiyatı istiyorsan Play'deki temel planı
-> güncellemen gerekiyor.
+> **Assistant:** ₺129.99 on the App Store, ₺99.99 on Play. Play is noticeably
+> cheaper — if you want the same price in both stores, you need to update the
+> base plan on Play.
 
-Bu soruyu tek çağrıda cevaplayabilen başka bir MCP sunucusu yok, çünkü hepsi tek
-mağazaya bakıyor. `magaza-mcp` ikisini aynı anda görür.
+No other MCP server can answer that in a single call, because they all look at
+one store. `magaza-mcp` sees both at once.
 
 ```mermaid
 flowchart LR
-    A["🤖 Asistanın<br/>Claude · Antigravity · Cursor"] -->|MCP / stdio| B["📦 magaza-mcp<br/>senin makinende"]
+    A["🤖 Your assistant<br/>Claude · Antigravity · Cursor"] -->|MCP / stdio| B["📦 magaza-mcp<br/>runs on your machine"]
     B -->|appstore__| C["🍎 App Store Connect"]
     B -->|play__| D["🤖 Google Play"]
-    B -->|magaza__| E["🔀 İkisi birden<br/>karşılaştırma · teşhis"]
+    B -->|magaza__| E["🔀 Both at once<br/>comparison · diagnostics"]
     E -.-> C
     E -.-> D
-    F["🔑 Anahtar Zinciri"] -.->|anahtarlar burada kalır| B
+    F["🔑 Keychain"] -.->|keys stay here| B
 
     style B fill:#2d6cdf,stroke:#1a4a9e,color:#fff
     style E fill:#7c3aed,stroke:#5b21b6,color:#fff
     style F fill:#059669,stroke:#047857,color:#fff
 ```
 
-Araya giren sunucu yok: paket senin makinende çalışır, doğrudan Apple ve
-Google ile konuşur, anahtarın Anahtar Zinciri'nden dışarı çıkmaz.
+No server sits in the middle: the package runs on your own machine, talks
+directly to Apple and Google, and your keys never leave your Keychain.
 
 ---
 
-## 📚 İçindekiler
+## 📚 Table of contents
 
 | | |
 | --- | --- |
-| [🎯 Neden bu var?](#-neden-bu-var) | Tek mağazalı sunucularla farkı |
-| [⚡ Kurulum](#-kurulum) | Asistanına yaptır — sen komut yazmıyorsun |
-| [🧑‍💻 Elle kurulum](#-elle-kurulum) | Asistan kullanmıyorsan |
-| [🧩 İki mağaza karışır mı?](#-iki-mağaza-karışır-mı) | Hayır — nedeni burada |
-| [💬 Ne sorabilirsin](#-ne-sorabilirsin) | Örnek komutlar |
-| [🧰 Araçlar](#-araçlar) | 27 aracın tam listesi |
-| [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~4.000 token |
-| [🔑 Gereken izinler](#-gereken-izinler) | Apple ve Google tarafında ne şart |
-| [🔒 Güvenlik](#-güvenlik) | Anahtarlar, onay kapıları, telemetri |
-| [🩺 Sorun giderme](#-sorun-giderme) | Sık karşılaşılan hatalar |
+| [🎯 Why this exists](#-why-this-exists) | The difference from single-store servers |
+| [⚡ Setup](#-setup) | Have your assistant do it — you don't type commands |
+| [🧑‍💻 Manual setup](#-manual-setup) | If you're not using an assistant |
+| [🧩 Do the two stores mix up?](#-do-the-two-stores-mix-up) | No — here's why |
+| [💬 What you can ask](#-what-you-can-ask) | Example prompts |
+| [🧰 Tools](#-tools) | Full list of all 27 tools |
+| [🌐 Full API access](#-full-api-access) | 1,440 operations, ~4,000 tokens |
+| [🔑 Required permissions](#-required-permissions) | What Apple and Google require |
+| [🔒 Security](#-security) | Keys, approval gates, telemetry |
+| [🩺 Troubleshooting](#-troubleshooting) | Common errors |
 
 ---
 
-## 🎯 Neden bu var?
+## 🎯 Why this exists
 
-Piyasadaki MCP sunucularının neredeyse hepsi tek mağazalı. İkisini birden
-kullanmak istiyorsan iki ayrı sunucu kurar, iki ayrı araç setiyle uğraşır ve
-karşılaştırma gerektiren her soruyu elle birleştirirsin.
+Almost every MCP server on the market covers a single store. If you want
+both, you install two separate servers, juggle two separate tool sets, and
+manually stitch together any question that needs a comparison.
 
-| Soru | Tek mağazalı sunucularla | `magaza-mcp` ile |
+| Question | With single-store servers | With `magaza-mcp` |
 | --- | --- | --- |
-| "Bu abonelik iki mağazada kaça?" | İki ayrı sorgu, elle karşılaştırma | Tek çağrı, yan yana |
-| "Kullanıcı ödedi ama premium yok, sorun nerede?" | Hangi mağaza olduğunu önce sen bulacaksın | İkisini birden tarar, bulguları sıralar |
-| "Nerede neyim yayında?" | İki liste, elle eşleştirme | iOS/Android eşleri eşleştirilmiş tek liste |
+| "How much is this subscription in both stores?" | Two separate queries, manual comparison | One call, side by side |
+| "User paid but didn't get premium, what's wrong?" | You figure out which store first | Scans both at once, ranks findings |
+| "Where is what published?" | Two lists, manual matching | One list with iOS/Android pairs already matched |
 
-Asıl kazanç araç sayısının artması değil: **iki mağazayı aynı çağrıda
-sorgulayabilen araçlar ancak böyle mümkün oluyor.**
+The real win isn't more tools: **it's tools that can query both stores in the
+same call, which is only possible once both are in one server.**
 
 ---
 
-## ⚡ Kurulum
+## ⚡ Setup
 
-Asistanına (Claude Code, Antigravity, Cursor, Codex, Gemini CLI…) bunu yaz:
-
-```
-https://github.com/tunaarikaya/magaza-mcp — bunu kur, AGENTS.md'yi oku
-```
-
-Asistan [AGENTS.md](AGENTS.md)'yi okur ve kurulumun tamamını üstlenir. Senin
-yapman gereken tek şey sorularına cevap vermek:
+Tell your assistant (Claude Code, Antigravity, Cursor, Codex, Gemini CLI…):
 
 ```
-Sen  › https://github.com/tunaarikaya/magaza-mcp — bunu kur, AGENTS.md'yi oku
-
-Asistan › Anahtarlarını makinende arıyorum...
-
-          Makinende iki anahtar buldum:
-            App Store : ~/Downloads/AuthKey_ABC123DEFG.p8   (Key ID ABC123DEFG)
-            Play      : ~/.config/play/hesap.json           (yayin@proje.iam...)
-
-          Bunları kullanayım mı? Başka bir dosya varsa yolunu söyle,
-          ya da anahtarı kopyalayıp bana at — ikisi de olur.
-
-Sen  › evet, kullan
-
-Asistan › App Store için Issuer ID lazım. App Store Connect → Kullanıcılar ve
-          Erişim → Entegrasyonlar sayfasında, anahtar listesinin üstündeki UUID.
-
-Sen  › 69a6de70-0000-0000-0000-000000000000
-
-Asistan › ✓ App Store Connect bağlandı — 4 uygulama görüldü
-          ✓ Google Play bağlandı — 3 uygulama görüldü
-          ✓ Claude Code ve Antigravity ayarlarına kaydedildi
-
-          Claude Code'u yeniden başlat, sonra şunu sor:
-          "İki mağazadaki uygulamalarımı listele"
+https://github.com/tunaarikaya/magaza-mcp — install this, read AGENTS.md
 ```
 
-**Anahtarını bulamazsa** ne yapacağını sorar: dosyanın yolunu söylersin,
-panona kopyalarsın, ya da anahtarın hiç yoksa nereden alacağını adım adım
-anlatır.
+The assistant reads [AGENTS.md](AGENTS.md) and handles the entire setup. All
+you do is answer its questions:
+
+```
+You       › https://github.com/tunaarikaya/magaza-mcp — install this, read AGENTS.md
+
+Assistant › Looking for your keys on this machine...
+
+            Found two keys:
+              App Store : ~/Downloads/AuthKey_ABC123DEFG.p8   (Key ID ABC123DEFG)
+              Play      : ~/.config/play/account.json         (publish@project.iam...)
+
+            Want me to use these? If there's another file, tell me the path,
+            or copy the key and paste it — either works.
+
+You       › yes, use them
+
+Assistant › I need the Issuer ID for App Store. It's the UUID above the key
+            list on App Store Connect → Users and Access → Integrations.
+
+You       › 69a6de70-0000-0000-0000-000000000000
+
+Assistant › ✓ App Store Connect connected — 4 apps found
+            ✓ Google Play connected — 3 apps found
+            ✓ Registered in Claude Code and Antigravity settings
+
+            Restart Claude Code, then ask:
+            "List my apps across both stores"
+```
+
+**If it can't find your key**, it will ask you how to proceed: give it the
+file path, copy the key to your clipboard, or — if you don't have a key yet —
+it'll walk you through getting one step by step.
 
 > [!IMPORTANT]
-> **Anahtarının içeriğini asistan görmez.** Kurulumu o yapar ama komutlar
-> dosyanın yolunu alır, içeriğini kendileri okuyup doğrudan Anahtar Zinciri'ne
-> yazar. Anahtarı panondan verdiğinde bile (`pbpaste | …`) içerik borudan
-> geçer, asistanın bağlamına girmez. AGENTS.md bunu asistana açıkça söyler.
+> **The assistant never sees the contents of your key.** It runs the setup,
+> but the commands take the file's **path**, read its contents themselves, and
+> write it straight into the Keychain. Even when you paste the key via
+> clipboard (`pbpaste | …`), the content flows through a pipe and never enters
+> the assistant's context. AGENTS.md tells the assistant this explicitly.
 
-Kurulumdan sonra açık olan uygulamaları yeniden başlat — MCP sunucuları
-yalnızca açılışta yüklenir.
+After setup, restart any open applications — MCP servers only load at
+startup.
 
 <details>
-<summary><b>Desteklenen istemciler ve ayar dosyaları</b></summary>
+<summary><b>Supported clients and config files</b></summary>
 
 <br>
 
-| İstemci | Ayar dosyası |
+| Client | Config file |
 | --- | --- |
 | Claude Code | `~/.claude.json` |
 | Claude Desktop | `~/Library/Application Support/Claude/claude_desktop_config.json` |
@@ -150,472 +153,483 @@ yalnızca açılışta yüklenir.
 | Windsurf | `~/.codeium/windsurf/mcp_config.json` |
 | Codex | `~/.codex/config.toml` |
 
-Mevcut ayarlarına dokunulmaz — yalnızca `magaza-mcp` girdisi eklenir veya
-güncellenir, her yazmadan önce `.magaza-mcp-yedek` kopyası alınır ve yazma
-atomik yapılır.
+Your existing config is left untouched — only the `magaza-mcp` entry is
+added or updated, a `.magaza-mcp-yedek` backup is taken before every write,
+and the write itself is atomic.
 
 </details>
 
 ---
 
-## 🧑‍💻 Elle kurulum
+## 🧑‍💻 Manual setup
 
-Asistan kullanmıyorsan sihirbaz aynı işi yapar:
+If you're not using an assistant, a wizard does the same job:
 
 ```bash
 npx magaza-mcp kur
 ```
 
 <details>
-<summary><b>Sihirbaz ne soruyor?</b></summary>
+<summary><b>What does the wizard ask?</b></summary>
 
 <br>
 
 ```
-  Mağaza MCP kurulumu
-  App Store Connect + Google Play, tek kurulumda
+  Mağaza MCP setup
+  App Store Connect + Google Play, in one setup
 
-  1. Hangi mağazaları bağlayalım?
+  1. Which stores should we connect?
 
-     App Store Connect (iOS / macOS)? [E/h] e
-     Google Play (Android)? [E/h] e
+     App Store Connect (iOS / macOS)? [Y/n] y
+     Google Play (Android)? [Y/n] y
 
-  2. App Store Connect anahtarı
+  2. App Store Connect key
 
      Key ID: ABC123DEFG
      Issuer ID: 00000000-0000-0000-0000-000000000000
-     .p8 dosyasının yolu: ~/Downloads/AuthKey_ABC123DEFG.p8
-     Apple'a bağlanılıyor... ✓ 4 uygulama görüldü
-     ✓ Anahtar kaydedildi (macOS Anahtar Zinciri)
+     Path to .p8 file: ~/Downloads/AuthKey_ABC123DEFG.p8
+     Connecting to Apple... ✓ 4 apps found
+     ✓ Key saved (macOS Keychain)
 
-  3. Google Play servis hesabı
+  3. Google Play service account
 
-     Servis hesabı JSON yolu: ~/.config/play/hesap.json
-     Google'a bağlanılıyor... ✓ 3 uygulama görüldü
-     ✓ Anahtar kaydedildi (macOS Anahtar Zinciri)
+     Path to service account JSON: ~/.config/play/account.json
+     Connecting to Google... ✓ 3 apps found
+     ✓ Key saved (macOS Keychain)
 
-  4. Hangi uygulamalara kurulsun?
+  4. Which clients should it be installed to?
 
-     Claude Code? [E/h] e
-     Antigravity (IDE + CLI)? [E/h] e
-     Cursor? [e/H] h
+     Claude Code? [Y/n] y
+     Antigravity (IDE + CLI)? [Y/n] y
+     Cursor? [y/N] n
 
-  Kurulum tamam.
+  Setup complete.
 ```
 
-| # | Soru | Not |
+| # | Question | Note |
 | --- | --- | --- |
-| 1 | Hangi mağazalar? | App Store, Play veya ikisi |
-| 2 | App Store anahtarı | Key ID, Issuer ID, `.p8` yolu — kaydetmeden önce Apple'a gerçek istek atıp doğrular |
-| 3 | Play servis hesabı | JSON anahtarının yolu — bu da Google'a karşı doğrulanır |
-| 4 | Hangi istemcilere? | Makinende kurulu görünenler işaretli gelir |
-| 5 | Salt-okunur olsun mu? | Varsayılan hayır |
+| 1 | Which stores? | App Store, Play, or both |
+| 2 | App Store key | Key ID, Issuer ID, `.p8` path — verified with a real request to Apple before saving |
+| 3 | Play service account | Path to the JSON key — also verified against Google |
+| 4 | Which clients? | Clients detected on your machine come pre-checked |
+| 5 | Read-only? | No by default |
 
 </details>
 
-**Anahtarların ayar dosyasına yazılmaz.** macOS'ta Anahtar Zinciri'ne kaydedilir;
-ayar dosyasına yalnızca hangi mağazaların açık olduğu (`MAGAZALAR`) girer.
-Anahtar Zinciri'ne erişilemeyen sistemlerde izinleri `0600` olan bir dosyaya
-düşülür.
+**Keys are never written to the config file.** On macOS they're saved to the
+Keychain; the config file only gets which stores are enabled (`MAGAZALAR`).
+On systems without Keychain access, it falls back to a file with `0600`
+permissions.
 
 <details>
-<summary><b>Bütün komutlar</b></summary>
+<summary><b>All commands</b></summary>
 
 <br>
 
 ```bash
-npx magaza-mcp tara        # Makinede .p8 ve servis hesabı anahtarı ara
-npx magaza-mcp anahtar ... # Anahtarı doğrula ve kasaya yaz (aşağıda)
-npx magaza-mcp kaydet      # Sunucuyu istemcilerin ayarlarına ekle
-npx magaza-mcp durum       # Neyin bağlı olduğunu göster (--json ile makine okunur)
-npx magaza-mcp araclar     # Yüklü araçları listele (✎ = veri değiştirebilir)
-npx magaza-mcp kur         # Elle kurulum sihirbazı
-npx magaza-mcp surum       # Sürümü yazdır
-npx magaza-mcp yardim      # Yardım
+npx magaza-mcp tara        # Search the machine for .p8 and service account keys
+npx magaza-mcp anahtar ... # Verify a key and write it to the vault (below)
+npx magaza-mcp kaydet      # Register the server in clients' configs
+npx magaza-mcp durum       # Show what's connected (--json for machine-readable)
+npx magaza-mcp araclar     # List installed tools (✎ = can modify data)
+npx magaza-mcp kur         # Manual setup wizard
+npx magaza-mcp surum       # Print version
+npx magaza-mcp yardim      # Help
 ```
 
-Anahtar kaydı (sihirbazın soru-cevap kısmının komut karşılığı):
+Registering a key (the command-line equivalent of the wizard's Q&A step):
 
 ```bash
 npx magaza-mcp anahtar --apple-p8 ~/Downloads/AuthKey_ABC123DEFG.p8 \
   --issuer-id 69a6de70-0000-0000-0000-000000000000
 
-npx magaza-mcp anahtar --play-json ~/.config/play/hesap.json
+npx magaza-mcp anahtar --play-json ~/.config/play/account.json
 
-pbpaste | npx magaza-mcp anahtar --play-json -   # panodan, dosya olmadan
-npx magaza-mcp anahtar --sil appstore            # kasadan sil
+pbpaste | npx magaza-mcp anahtar --play-json -   # from clipboard, no file
+npx magaza-mcp anahtar --sil appstore            # remove from the vault
 ```
 
-`--key-id` verilmezse dosya adından okunur. Anahtar, Apple/Google'a gerçek bir
-istek atılarak doğrulanmadan kasaya yazılmaz; doğrulama başarısızsa kasadaki
-eski anahtar olduğu gibi kalır.
+If `--key-id` isn't given, it's read from the filename. A key is never
+written to the vault without being verified against Apple/Google with a real
+request; if verification fails, the existing key in the vault is left
+untouched.
 
 </details>
 
 ---
 
-## 🧩 İki mağaza karışır mı?
+## 🧩 Do the two stores mix up?
 
-Hayır — ve bu tesadüf değil, tasarımın kendisi.
+No — and that's not an accident, it's the design itself.
 
-**1. Araç isimleri önekle ayrılmıştır.** App Store'a giden her araç `appstore__`,
-Play'e giden her araç `play__` ile başlar. Bir araç asla iki API'ye birden
-gitmez. Ortak isim olmadığı için karışma ihtimali de yok.
+**1. Tool names are separated by prefix.** Every tool going to App Store
+starts with `appstore__`, every tool going to Play starts with `play__`. A
+tool never talks to both APIs. There's no shared name, so there's nothing to
+mix up.
 
-**2. Seçmediğin mağazanın araçları hiç yüklenmez.** Sunucu açılışta `MAGAZALAR`
-değişkenini okur ve listeyi ona göre kurar — seçmediğin mağazanın araçları
-belleğe bile alınmaz, modele gösterilmez, token harcamaz.
+**2. Tools for the store you didn't pick are never loaded.** On startup, the
+server reads the `MAGAZALAR` variable and builds the tool list from it — the
+other store's tools aren't even loaded into memory, aren't shown to the
+model, and cost zero tokens.
 
-| Kurulum | Yüklenen araç |
+| Setup | Tools loaded |
 | --- | --- |
-| İki mağaza | 27 |
-| Yalnızca App Store | 14 |
-| Yalnızca Play | 13 |
-| Salt-okunur (iki mağaza) | 24 |
+| Both stores | 27 |
+| App Store only | 14 |
+| Play only | 13 |
+| Read-only (both stores) | 24 |
 
-**3. Çapraz araçlar yalnızca iki mağaza da açıkken var olur.** Tek mağazalı
-kurulumda hiç oluşturulmazlar — anlamları olmadığı için.
+**3. Cross-store tools only exist when both stores are enabled.** In a
+single-store setup they're never created at all — they'd have no meaning.
 
-**4. Dispatch araçları da kapsamını bilir.** `magaza__endpoint_ara` ve
-`magaza__cagir` araçlarının `magaza` parametresi, yalnızca kurduğun mağazaları
-kabul eden bir enum'dur. Sadece Play kurduysan model `magaza: "appstore"` diye
-bir çağrı yapamaz; şema buna izin vermez.
+**4. The dispatch tools know their scope too.** The `magaza` parameter on
+`magaza__endpoint_ara` and `magaza__cagir` is an enum that only accepts the
+stores you've set up. If you only installed Play, the model can't make a call
+with `magaza: "appstore"` — the schema doesn't allow it.
 
 ---
 
-## 💬 Ne sorabilirsin
+## 💬 What you can ask
 
-Örneklerdeki uygulama adları uydurmadır; sen kendi uygulamalarının adını
-kullanırsın.
+The app names in the examples are made up; you'd use your own app's name.
 
-**İki mağaza birden**
+**Both stores at once**
 
-- *"İki mağazadaki uygulamalarımı listele, hangisi nerede yayında?"*
-- *"Nota Defteri'nin aylık aboneliği App Store'da ve Play'de Türkiye'de kaç para? Fark var mı?"*
-- *"Bir kullanıcı ödeme yaptığını ama premium açılmadığını söylüyor. İki mağazada da satın alma kurulumunu kontrol et."*
+- *"List my apps across both stores — where's each one published?"*
+- *"What's Nota Defteri's monthly subscription on App Store vs. Play in Turkey? Is there a difference?"*
+- *"A user says they paid but didn't get premium. Check the purchase setup in both stores."*
 
 **App Store**
 
-- *"Hangi sürümüm incelemede takıldı?"*
-- *"Dün yüklediğim TestFlight build'inin işlenmesi bitti mi?"*
-- *"Son bir haftadaki 1 ve 2 yıldızlı yorumları özetle, en sık şikâyet ne?"*
-- *"Hazırlanmakta olan sürümün 'Bu sürümde neler yeni' metnini güncelle."*
+- *"Which of my versions is stuck in review?"*
+- *"Did yesterday's TestFlight build finish processing?"*
+- *"Summarize the 1- and 2-star reviews from the last week — what's the most common complaint?"*
+- *"Update the 'What's New' text for the version in preparation."*
 
 **Google Play**
 
-- *"Hangi sürüm production kanalında ve yüzde kaç kullanıcıya açık?"*
-- *"Çökme oranı son 14 günde arttı mı?"*
-- *"Bu satın alma token'ı geçerli mi, abonelik hâlâ aktif mi?"*
-- *"Şu yoruma kibar bir yanıt yaz, ama önce bana göster."*
+- *"Which version is on the production channel and what percentage of users does it reach?"*
+- *"Has the crash rate gone up over the last 14 days?"*
+- *"Is this purchase token valid, is the subscription still active?"*
+- *"Draft a polite reply to this review, but show me first."*
 
 ---
 
-## 🧰 Araçlar
+## 🧰 Tools
 
-Önek hangi mağazaya gidildiğini söyler. **✎** işaretli araçlar veri değiştirir
-ve `onayla=true` gelmeden çalışmaz.
+The prefix tells you which store a tool goes to. Tools marked **✎** modify
+data and won't run without `onayla=true`.
 
 <details open>
-<summary><b>İki mağaza birden — 3 araç</b> · <i>projenin can damarı</i></summary>
+<summary><b>Both stores at once — 3 tools</b> · <i>the heart of the project</i></summary>
 
 <br>
 
-Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
+These tools only load when both stores are connected.
 
-| Araç | Ne yapar |
+| Tool | What it does |
 | --- | --- |
-| `magaza__genel_bakis` | İki mağazadaki uygulamaları tek listede toplar; aynı ürünün iOS/Android eşlerini yan yana koyar, sadece tek mağazada olanları ayırır. |
-| `magaza__abonelik_karsilastir` | Aynı uygulamanın aboneliklerini iki mağazada karşılaştırır: ürün kimlikleri, süreler ve istenen ülkedeki fiyatlar. Ülke kodunu iki mağazanın istediği biçime kendi çevirir. |
-| `magaza__iap_teshis` | "Ödedi ama premium göremiyor" sorunlarını teşhis eder: ürünler yayında mı, o ülkede fiyatı var mı, plan yeni abonelere açık mı; Play satın alma token'ı verirsen onu da doğrular ve bulguları madde madde yazar. |
+| `magaza__genel_bakis` | Collects apps from both stores into one list; puts the iOS/Android pair of the same product side by side, and separates out apps that only exist in one store. |
+| `magaza__abonelik_karsilastir` | Compares the same app's subscriptions across both stores: product IDs, durations, and prices in the requested country. Converts the country code to whichever format each store expects. |
+| `magaza__iap_teshis` | Diagnoses "paid but no premium" issues: are the products live, do they have a price in that country, is the plan open to new subscribers; if you give it a Play purchase token it verifies that too, and writes up its findings as a list. |
 
 </details>
 
 <details>
-<summary><b>App Store Connect — 11 araç</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 11 tools</b> (<code>appstore__</code>)</summary>
 
 <br>
 
-| Araç | Ne yapar |
+| Tool | What it does |
 | --- | --- |
-| `appstore__uygulamalar` | Hesaptaki uygulamaları listeler: ad, bundle ID, SKU, birincil dil ve diğer araçların istediği `id`. |
-| `appstore__surumler` | Bir uygulamanın App Store sürümlerini ve durumlarını gösterir (hazırlanıyor, incelemede, yayında, reddedildi). |
-| `appstore__buildler` | TestFlight build'lerini, işlenme durumlarını ve son kullanma tarihlerini listeler. |
-| `appstore__yorumlar` | Müşteri yorumlarını en yeniden eskiye getirir; puana ve ülkeye göre süzülebilir, istersen yalnızca henüz yanıtlanmamışları verir. Varsa mevcut geliştirici yanıtını da gösterir. |
-| `appstore__yorum_yanitla` ✎ | Bir yoruma geliştirici yanıtı yazar (Apple incelemesinden sonra yayınlanır). |
-| `appstore__abonelikler` | Abonelik gruplarını ve içlerindeki abonelikleri listeler: ürün kimliği, süre, durum. |
-| `appstore__abonelik_fiyatlari` | Bir aboneliğin ülke ülke müşteri fiyatlarını ve geliştirici gelirini getirir. |
-| `appstore__iap_urunler` | Tek seferlik uygulama içi satın alma ürünlerini listeler. |
-| `appstore__testflight_gruplari` | TestFlight beta gruplarını, her gruptaki test kullanıcı sayısını, genel davet linklerini ve kotalarını gösterir. |
-| `appstore__metin_guncelle` ✎ | Hazırlanmakta olan sürümün mağaza metinlerini günceller: sürüm notları, açıklama, anahtar kelimeler, tanıtım metni. |
-| `appstore__satis_raporu` | Satış/indirme raporunu TSV olarak indirir: günlük, haftalık, aylık veya yıllık; satış, ön sipariş, yükleme, abonelik, abonelik olayı, abone ve teklif kodu raporları. |
+| `appstore__uygulamalar` | Lists the apps on the account: name, bundle ID, SKU, primary language, and the `id` other tools need. |
+| `appstore__surumler` | Shows an app's App Store versions and their status (in preparation, in review, live, rejected). |
+| `appstore__buildler` | Lists TestFlight builds, their processing status, and expiry dates. |
+| `appstore__yorumlar` | Fetches customer reviews, newest first; filterable by rating and country, or only the ones without a reply yet. Shows the existing developer response if there is one. |
+| `appstore__yorum_yanitla` ✎ | Writes a developer response to a review (published after Apple's moderation). |
+| `appstore__abonelikler` | Lists subscription groups and the subscriptions in them: product ID, duration, status. |
+| `appstore__abonelik_fiyatlari` | Fetches a subscription's customer price and developer proceeds, country by country. |
+| `appstore__iap_urunler` | Lists one-time in-app purchase products. |
+| `appstore__testflight_gruplari` | Shows TestFlight beta groups, how many testers are in each, public invite links, and quotas. |
+| `appstore__metin_guncelle` ✎ | Updates the store text of the version in preparation: release notes, description, keywords, promotional text. |
+| `appstore__satis_raporu` | Downloads the sales/download report as TSV: daily, weekly, monthly, or yearly; sales, pre-order, installs, subscriptions, subscription events, subscribers, and offer code reports. |
 
 </details>
 
 <details>
-<summary><b>Google Play — 10 araç</b> (<code>play__</code>)</summary>
+<summary><b>Google Play — 10 tools</b> (<code>play__</code>)</summary>
 
 <br>
 
-| Araç | Ne yapar |
+| Tool | What it does |
 | --- | --- |
-| `play__uygulamalar` | Servis hesabının eriştiği uygulamaları listeler; diğer araçların istediği paket adını buradan alırsın. |
-| `play__kanallar` | Yayın kanallarını (internal, alpha, beta, production) ve her kanaldaki sürümleri, kullanıcı yüzdeleriyle birlikte gösterir. Servis hesabının sürüm yönetme yetkisi gerekir. |
-| `play__yorumlar` | Kullanıcı yorumlarını getirir; istenirse çevirir. Play API'si yalnızca son ~1 haftayı verir. |
-| `play__yorum_yanitla` ✎ | Bir yoruma geliştirici yanıtı yazar (en fazla 350 karakter). |
-| `play__abonelikler` | Abonelikleri ve temel planlarını (base plan) listeler: süre, durum, fiyatlandırılan ülke sayısı. Arşivlenmişleri istersen dahil eder. |
-| `play__abonelik_fiyatlari` | Bir temel planın ülke ülke fiyatlarını ve yeni abonelere açık olup olmadığını getirir; tek tek listelenmemiş ülkeler için "diğer bölgeler" yedek fiyatına da bakar. |
-| `play__urunler` | Tek seferlik ürünleri listeler; yeni (`oneTimeProducts`) ve eski (`inappproducts`) modelin ikisini de dener. |
-| `play__satin_alma_dogrula` | Bir satın alma token'ını doğrular: abonelik durumu, onay durumu, bitiş tarihi, test satın alması mı. |
-| `play__iade_edilenler` | İptal edilmiş, iade edilmiş veya geri alınmış satın almaları listeler; iade sebebini ve kaynağını okunur hale getirir. Google yalnızca son 30 günü verir. |
-| `play__cokme_orani` | Android vitals çökme oranını, ölçüme giren farklı kullanıcı sayısıyla birlikte günlük olarak getirir. |
+| `play__uygulamalar` | Lists the apps the service account can access; this is where you get the package name other tools need. |
+| `play__kanallar` | Shows release channels (internal, alpha, beta, production) and the versions on each, with user rollout percentages. Requires the service account to have release-management permission. |
+| `play__yorumlar` | Fetches user reviews, translating them if asked. The Play API only returns roughly the last week. |
+| `play__yorum_yanitla` ✎ | Writes a developer response to a review (350 characters max). |
+| `play__abonelikler` | Lists subscriptions and their base plans: duration, status, number of priced countries. Includes archived ones if asked. |
+| `play__abonelik_fiyatlari` | Fetches a base plan's prices country by country, and whether it's open to new subscribers; also checks the "rest of world" fallback price for countries not listed individually. |
+| `play__urunler` | Lists one-time products; tries both the new (`oneTimeProducts`) and legacy (`inappproducts`) models. |
+| `play__satin_alma_dogrula` | Verifies a purchase token: subscription status, acknowledgment status, expiry date, whether it's a test purchase. |
+| `play__iade_edilenler` | Lists cancelled, refunded, or charged-back purchases; turns the refund reason and source into something readable. Google only returns the last 30 days. |
+| `play__cokme_orani` | Fetches Android vitals crash rate day by day, along with the number of distinct users in the measurement. |
 
 </details>
 
 <details>
-<summary><b>Tüm API'ye erişim — 3 araç</b> (<code>magaza__</code>)</summary>
+<summary><b>Full API access — 3 tools</b> (<code>magaza__</code>)</summary>
 
 <br>
 
-| Araç | Ne yapar |
+| Tool | What it does |
 | --- | --- |
-| `magaza__endpoint_ara` | Bağlı mağazaların API'lerinin tamamında uç nokta arar; operasyon adını, HTTP yöntemini, yolunu ve parametrelerini döndürür. |
-| `magaza__cagir` ✎ | Bulunan operasyonu çalıştırır. Yol parametrelerini otomatik yerine koyar; veri değiştiren işlemler `onayla=true` olmadan çalışmaz. |
-| `magaza__sema` | Bir operasyonun istek gövdesinin nasıl olması gerektiğini gösterir; POST/PATCH çağrılarından önce kullanılır. |
+| `magaza__endpoint_ara` | Searches for an endpoint across all connected stores' APIs; returns the operation name, HTTP method, path, and parameters. |
+| `magaza__cagir` ✎ | Runs the operation you found. Fills in path parameters automatically; operations that modify data won't run without `onayla=true`. |
+| `magaza__sema` | Shows what an operation's request body should look like; used before POST/PATCH calls. |
 
-`magaza__cagir` burada ✎ ile işaretli, çünkü veri değiştiren operasyonları da
-çalıştırabilir. Buna karşılık `npx magaza-mcp araclar` çıktısında ✎ görünmez:
-araç aynı zamanda katalogdaki bütün okuma uçlarının tek kapısı olduğu için
-salt-okunur modda listeden düşmez, yalnızca yazma operasyonları kapatılır.
+`magaza__cagir` is marked ✎ here because it can also run operations that
+modify data. In `npx magaza-mcp araclar` output it doesn't show ✎ though:
+since it's also the single gateway to every read endpoint in the catalog, it
+isn't dropped from the list in read-only mode — only write operations through
+it are blocked.
 
 </details>
 
 ---
 
-## 🌐 Tam API erişimi
+## 🌐 Full API access
 
-Seçilmiş araçlar günlük işin büyük kısmını görür. Geri kalanı için sunucu iki
-mağazanın API'lerinin **tamamını** taşır:
+The curated tools cover most day-to-day work. For everything else, the server
+carries the **entire** API surface of both stores:
 
-| Kaynak | Operasyon |
+| Source | Operations |
 | --- | --- |
-| App Store Connect API v4.5 | 1270 |
+| App Store Connect API v4.5 | 1,270 |
 | Android Publisher API v3 | 145 |
 | Play Developer Reporting API v1beta1 | 25 |
-| **Toplam** | **1440** |
+| **Total** | **1,440** |
 
-Hazır araçlar yetmediğinde model önce `magaza__endpoint_ara` ile aradığı işlemi
-bulur, sonra `magaza__cagir` ile çalıştırır.
+When the curated tools aren't enough, the model first finds the operation it
+needs with `magaza__endpoint_ara`, then runs it with `magaza__cagir`.
 
-### Neden hepsi ayrı araç değil?
+### Why aren't they all separate tools?
 
-MCP araç tanımları **her istekte** bağlama girer — yani yüklü araç listesi, sen
-hiçbirini kullanmasan bile her mesajda yeniden ödenir.
+MCP tool definitions get loaded into context **on every request** — the
+installed tool list is paid for again on every message, even if you don't use
+any of them.
 
-| | Araç | Her mesajda ödenen |
+| | Tools | Paid on every message |
 | --- | --- | --- |
-| **magaza-mcp** | 27 | **~4.000 token** |
-| Hepsi ayrı araç olsaydı | 1440 | ~210.000 token |
+| **magaza-mcp** | 27 | **~4,000 tokens** |
+| If all were separate tools | 1,440 | ~210,000 tokens |
 
 > [!NOTE]
-> Kapalı özellik yok: 1440 operasyonun tamamına erişilebiliyor, ama
-> kullanılmayanın maliyeti sıfır. Bu yüzden "şu özelliği açayım mı, token yer"
-> diye bir ayar da yok — açılacak bir şey yok.
+> Nothing is locked away: all 1,440 operations are reachable, but the ones
+> you don't use cost nothing. There's no "should I turn this feature on, it
+> costs tokens" setting either — there's nothing to turn on.
 
-Kataloglar Apple ve Google'ın **resmî spesifikasyonlarından** üretilir: Apple'ın
-yayınladığı App Store Connect OpenAPI dosyası ile Google'ın Android Publisher ve
-Play Developer Reporting discovery dökümanları. Elle yazılmış uç nokta listesi
-yoktur. Apple'ın eskimiş (deprecated) işaretlediği 159 operasyon katalogdan
-atılmaz — bazıları o yeteneğe giden tek yol — ama özetleri `[ESKİMİŞ]` ile
-başlar ve arama sonuçlarında geriye itilir.
+The catalogs are generated from Apple's and Google's **official
+specifications**: Apple's published App Store Connect OpenAPI file, and
+Google's Android Publisher and Play Developer Reporting discovery documents.
+There's no hand-written endpoint list. The 159 operations Apple marks as
+deprecated aren't dropped from the catalog — some of them are the only way to
+reach that capability — but their summaries start with `[ESKİMİŞ]`
+(deprecated) and are pushed down in search results.
 
 ---
 
-## 🔑 Gereken izinler
+## 🔑 Required permissions
 
-**App Store Connect** — Anahtarı oluştururken **App Manager** rolü yeterlidir;
-Admin gerekmez. İstisnalar: kullanıcı ve erişim yönetimi uç noktaları ile bazı
-analitik raporlar daha yüksek yetki ister.
+**App Store Connect** — The **App Manager** role is enough when creating the
+key; Admin isn't required. Exceptions: user/access management endpoints and
+some analytics reports need higher privileges.
 
-**Google Play** — İki adım da şart:
+**Google Play** — Both steps are required:
 
-1. Servis hesabının **Play Console → Kullanıcılar ve izinler**'den davet
-   edilmesi ve ilgili uygulamalara izin verilmesi.
-2. Cloud projesinde **Android Publisher API** ve **Play Developer Reporting
-   API**'nin etkinleştirilmiş olması. Uygulama listelemesi ve çökme metrikleri
-   Reporting API'sinden geldiği için ikincisi de gerçekten gereklidir.
+1. The service account must be invited from **Play Console → Users and
+   permissions** and granted access to the relevant apps.
+2. The **Android Publisher API** and **Play Developer Reporting API** must be
+   enabled on the Cloud project. App listing and crash metrics come from the
+   Reporting API, so the second one is genuinely required too.
 
 > [!WARNING]
-> Sözleşme, vergi ve banka bilgileri **hiçbir API anahtarıyla okunamaz.** Apple
-> bu verileri API'ye hiç açmaz; yalnızca Hesap Sahibi arayüzden görebilir.
+> Contract, tax, and banking information **cannot be read with any API key.**
+> Apple never exposes this data to the API at all; only the Account Holder can
+> see it in the dashboard.
 
 ---
 
-## 🔒 Güvenlik
+## 🔒 Security
 
-- **Anahtarlar Anahtar Zinciri'nde.** Apple `.p8` ve Google servis hesabı JSON'u
-  macOS Anahtar Zinciri'nde saklanır; ayar dosyalarına, ortam değişkenlerine
-  veya repoya yazılmaz.
-- **Kurulumu asistan yapsa bile anahtarı görmez.** `anahtar` komutu dosyanın
-  yolunu alır, içeriği kendisi okur ve doğrudan kasaya yazar; panodan verilen
-  anahtar da borudan geçer. Anahtarın içeriği hiçbir komutun çıktısında
-  görünmez — `durum` yalnızca Key ID'nin son dört hanesini, `tara` yalnızca
-  dosya yollarını basar.
-- **Veri değiştiren işlemler onay ister.** Yazma araçları ilk seferde çalışmaz:
-  ne yapılacağını ve beklenen gövdeyi döndürürler; işlem ancak kullanıcı
-  onayladıktan sonra `onayla=true` ile tekrarlandığında yürür. Bu **sunucu
-  tarafında** uygulanır — istemcinin onay arayüzüne bağlı değildir.
-- **Salt-okunur mod.** `--salt-okunur` (veya `SALT_OKUNUR=1`) yazma yapan
-  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 27 araç
-  24'e düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
-  kapısıdır — ama yazma operasyonu istendiğinde reddeder.
-- **Yol parametreleri doğrulanır.** Araçlara verilen kimlikler URL'e girmeden
-  önce kodlanır; `.` ve `..` gibi yol gezinme denemeleri reddedilir. Mutlak
-  adreslerde hedef host doğrulanır, böylece hiçbir istek Apple ve Google
-  dışındaki bir adrese token taşıyamaz.
-- **İstemci hangi aracın veri değiştirdiğini görür.** Araç listesi MCP
-  `annotations` alanlarıyla (`readOnlyHint`, `destructiveHint`) birlikte verilir.
-- **Paket kaynağı kanıtlanabilir.** npm'e yayınlanan her sürüm GitHub Actions
-  içinde derlenir ve npm, Sigstore ile imzalı bir köken belgesi (provenance)
-  üretir: npm sayfasındaki **Provenance** bölümü, indirdiğin tarball'ın bu
-  depodaki hangi commit'ten üretildiğini gösterir. Yayın için depoda saklanan
-  bir token yoktur; GitHub her yayında kısa ömürlü, imzalı bir kimlik üretir
-  (trusted publishing), dolayısıyla çalınacak bir yayın anahtarı da yoktur.
-- **Telemetri yok.** Hiçbir analitik, hata raporu veya kullanım verisi
-  gönderilmez. Ağ trafiği yalnızca `api.appstoreconnect.apple.com`,
-  `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com` ve
-  token için `oauth2.googleapis.com` adreslerine gider. Araya giren bir sunucu
-  yoktur; veri doğrudan senin makinenle Apple ve Google arasında akar.
-
----
-
-## 🩺 Sorun giderme
-
-<details>
-<summary><b>Apple 401 döndürüyor</b></summary>
-
-<br>
-
-Key ID, Issuer ID ve `.p8` dosyası birbirine ait olmayabilir — üçü aynı anahtara
-ait olmalı. Uyuşuyorlarsa sistem saatine bak: imzalanan JWT 20 dakika ömürlüdür
-ve saati kaymış bir makinede üretilen token Apple tarafından reddedilir. Ayrıca
-`.p8` dosyasının bir **App Store Connect API anahtarı** olduğundan emin ol;
-StoreKit veya push anahtarları burada çalışmaz.
-
-</details>
-
-<details>
-<summary><b>Apple 403 döndürüyor</b></summary>
-
-<br>
-
-Anahtarın rolü o işlem için yetersiz. App Manager çoğu şeye yeter; kullanıcı
-yönetimi ve bazı raporlar daha fazlasını ister.
-
-Ama bir şeyi baştan bilmekte fayda var: **sözleşme, vergi ve banka bilgileri
-hiçbir API anahtarıyla okunamaz.** Buradaki 403 bir yapılandırma hatası
-değildir, düzeltilemez.
-
-</details>
-
-<details>
-<summary><b>Play 403 döndürüyor, <code>inappproducts</code> uç noktasında</b></summary>
-
-<br>
-
-Uygulama Google'ın yeni ürün modeline geçmiştir; eski `inappproducts` uç noktası
-artık kapalıdır ve `oneTimeProducts` kullanılmalıdır. `play__urunler` aracı bunu
-kendisi halleder: önce yeni uç noktayı dener, olmazsa eskisine düşer ve hangi
-modeli kullandığını çıktıda söyler.
-
-</details>
-
-<details>
-<summary><b>Play 403 döndürüyor, genel olarak</b></summary>
-
-<br>
-
-Servis hesabı Play Console'da uygulamaya davet edilmemiş olabilir. Davet ettikten
-sonra izinlerin yayılması birkaç dakika sürebilir. Davet tamamsa Cloud projesinde
-Android Publisher API ve Play Developer Reporting API'nin açık olduğunu doğrula.
-
-</details>
-
-<details>
-<summary><b>"Play uygulamalarımı listele" neden Reporting API'sinden geliyor?</b></summary>
-
-<br>
-
-Çünkü Android Publisher API'sinde uygulama listeleme uç noktası **yoktur** —
-Google böyle bir uç nokta hiç yayınlamadı. Paket adını bilmeden hiçbir Publisher
-çağrısı yapılamadığı için liste, Play Developer Reporting API'sinin `apps:search`
-uç noktasından alınır. Bu yüzden Reporting API'si sadece çökme metrikleri için
-değil, temel kullanım için de açık olmalıdır.
-
-</details>
-
-<details>
-<summary><b>Play'de sürüm/kanal bilgisi neden bazen gecikiyor?</b></summary>
-
-<br>
-
-Play'de kanal bilgisi ancak bir "düzenleme oturumu" (edit) içinden okunabilir.
-Okuma araçları bu oturumu kendileri açar, okur ve commit etmeden bırakır — yani
-hiçbir değişiklik yaratmaz — ama bu fazladan iki HTTP çağrısı demektir.
-
-</details>
+- **Keys live in the Keychain.** The Apple `.p8` and Google service account
+  JSON are stored in the macOS Keychain; never written to config files,
+  environment variables, or the repo.
+- **The assistant never sees the key, even when it runs the setup.** The
+  `anahtar` command takes the file's path, reads the content itself, and
+  writes it straight to the vault; a key given via clipboard also flows
+  through a pipe. The key's content never appears in any command's output —
+  `durum` only prints the last four characters of the Key ID, `tara` only
+  prints file paths.
+- **Operations that modify data require approval.** Write tools don't run on
+  the first call: they return what would happen and the expected request
+  body; the operation only runs once the user approves and it's called again
+  with `onayla=true`. This is enforced **server-side** — it doesn't depend on
+  the client's approval UI.
+- **Read-only mode.** `--salt-okunur` (or `SALT_OKUNUR=1`) removes every
+  write-capable tool from the list entirely: the model can't see them or call
+  them. 27 tools become 24. `magaza__cagir` stays in the list because it's
+  also the single gateway for read endpoints in the catalog — but it refuses
+  write operations when read-only mode is on.
+- **Path parameters are validated.** IDs passed to tools are encoded before
+  entering a URL; path-traversal attempts like `.` and `..` are rejected. For
+  absolute URLs the target host is validated, so no request can carry a token
+  to anywhere other than Apple or Google.
+- **Clients can see which tools modify data.** The tool list ships with MCP
+  `annotations` (`readOnlyHint`, `destructiveHint`).
+- **Package provenance is verifiable.** Every version published to npm is
+  built inside GitHub Actions, and npm generates a Sigstore-signed provenance
+  attestation: the **Provenance** section on the npm page shows which commit
+  in this repo the tarball you downloaded was built from. No publish token is
+  stored in the repo; GitHub issues a short-lived, signed identity on every
+  release (trusted publishing), so there's no publish key to steal either.
+- **No telemetry.** No analytics, error reports, or usage data are sent.
+  Network traffic only goes to `api.appstoreconnect.apple.com`,
+  `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com`,
+  and `oauth2.googleapis.com` for tokens. There's no server in the middle;
+  data flows directly between your machine and Apple/Google.
 
 ---
 
-## 🛠 Geliştirme
+## 🩺 Troubleshooting
+
+<details>
+<summary><b>Apple returns 401</b></summary>
+
+<br>
+
+The Key ID, Issuer ID, and `.p8` file might not belong together — all three
+need to be from the same key. If they match, check the system clock: the
+signed JWT lives 20 minutes, and a token produced on a machine with a drifted
+clock gets rejected by Apple. Also make sure the `.p8` file is an **App Store
+Connect API key** — StoreKit or push keys don't work here.
+
+</details>
+
+<details>
+<summary><b>Apple returns 403</b></summary>
+
+<br>
+
+The key's role isn't sufficient for that operation. App Manager covers most
+things; user management and some reports need more.
+
+Worth knowing upfront: **contract, tax, and banking information can't be read
+with any API key.** A 403 here isn't a misconfiguration, it can't be fixed.
+
+</details>
+
+<details>
+<summary><b>Play returns 403 on the <code>inappproducts</code> endpoint</b></summary>
+
+<br>
+
+The app has moved to Google's new product model; the legacy `inappproducts`
+endpoint is now closed and `oneTimeProducts` should be used instead. The
+`play__urunler` tool handles this itself: it tries the new endpoint first,
+falls back to the legacy one if needed, and tells you in the output which
+model it used.
+
+</details>
+
+<details>
+<summary><b>Play returns 403 in general</b></summary>
+
+<br>
+
+The service account may not have been invited to the app in Play Console.
+After inviting it, permissions can take a few minutes to propagate. If the
+invite is already in place, verify that Android Publisher API and Play
+Developer Reporting API are enabled on the Cloud project.
+
+</details>
+
+<details>
+<summary><b>Why does "list my Play apps" come from the Reporting API?</b></summary>
+
+<br>
+
+Because the Android Publisher API **has no app-listing endpoint** — Google
+never published one. Since no Publisher call can be made without knowing the
+package name, the list is pulled from the Play Developer Reporting API's
+`apps:search` endpoint instead. That's why the Reporting API needs to be
+enabled not just for crash metrics, but for basic usage too.
+
+</details>
+
+<details>
+<summary><b>Why is Play's version/channel info sometimes delayed?</b></summary>
+
+<br>
+
+On Play, channel information can only be read from within an "edit session."
+The read tools open this session themselves, read from it, and leave it
+without committing — so it creates no changes — but it does mean two extra
+HTTP calls.
+
+</details>
+
+---
+
+## 🛠 Development
 
 ```bash
 git clone https://github.com/tunaarikaya/magaza-mcp.git
 cd magaza-mcp
 npm install
-npm run build      # TypeScript derle
-npm run kontrol    # Tip kontrolü (tsc --noEmit)
-npm run dev        # İzleme modunda derleme
+npm run build      # Compile TypeScript
+npm run kontrol    # Type-check (tsc --noEmit)
+npm run dev        # Compile in watch mode
 ```
 
-Araç kataloglarını spesifikasyonlardan yeniden üretmek için:
+To regenerate the tool catalogs from the specs:
 
 ```bash
 node scripts/uret-katalog.mjs
 ```
 
-`spec/` altındaki üç spesifikasyon dosyasını okur ve `src/katalog/` altındaki
-katalogları yeniden yazar. Operasyon listesi elle düzenlenmez.
+This reads the three spec files under `spec/` and rewrites the catalogs under
+`src/katalog/`. The operation list is never hand-edited.
 
 ---
 
-## 🤝 Benzer projeler
+## 🤝 Similar projects
 
-Bu alanda önce yola çıkmış, iyi iş yapan projeler var. İhtiyacın tek mağazayla
-sınırlıysa bunlara bakmanı içtenlikle öneririz:
+There are good projects in this space that came before this one. If your
+needs are limited to a single store, we genuinely recommend looking at them:
 
-- **[Heimdall](https://github.com/erayendes/app-store-connect-mcp)** — App Store
-  Connect API'sinin tamamını 890 araçla kapsayan, profil sistemiyle araç setini
-  daraltmana izin veren çok kapsamlı bir sunucu. Sadece iOS tarafıyla
-  ilgileniyorsan bu alandaki en derin proje.
+- **[Heimdall](https://github.com/erayendes/app-store-connect-mcp)** — Covers
+  the entire App Store Connect API with 890 tools, with a profile system that
+  lets you narrow the tool set down. The deepest project in this space if
+  you're only interested in iOS.
 - **[app-store-connect-mcp-server](https://github.com/JoshuaRileyDev/app-store-connect-mcp-server)**
-  — Alanın ilki. App Store Connect'i bir MCP sunucusunun arkasına koyma fikrini
-  ilk kuran proje; sonradan gelen herkes bir şekilde buna borçlu.
+  — The first one. Established the idea of putting App Store Connect behind
+  an MCP server; everyone who came after owes something to it.
 - **[google-play-developer-mcp](https://github.com/devinwang/google-play-developer-mcp)**
-  — Play tarafında kapsamlı ve olgun bir sunucu. Yalnızca Android yayınlıyorsan
-  işini fazlasıyla görür.
+  — A comprehensive, mature server on the Play side. More than enough if
+  you're only publishing on Android.
 
-Farkımız şu: bu projelerin hepsi tek mağazaya bakar. `magaza-mcp` ikisini tek
-kurulumda birleştirir ve iki mağazayı aynı çağrıda karşılaştırabilen araçlar
-sunar — tek mağazalı bir sunucuda yapılamayan şey tam olarak budur.
+Our difference: all of these look at a single store. `magaza-mcp` combines
+both in one setup and offers tools that can compare both stores in the same
+call — exactly what a single-store server can't do.
 
 ---
 
-## 📄 Lisans
+## 📄 License
 
-MIT — ayrıntılar için [LICENSE](LICENSE). Üçüncü taraf kaynaklar için
-[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+MIT — see [LICENSE](LICENSE) for details. See
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md) for third-party sources.
 
-App Store, TestFlight, App Store Connect, Google Play ve Play Console adları
-sahiplerinin tescilli markalarıdır. Bu proje bağımsız bir açık kaynak
-çalışmasıdır; Apple Inc. veya Google LLC ile bağlantılı değildir, onlar
-tarafından onaylanmamış, desteklenmemiş veya sponsor edilmemiştir.
+App Store, TestFlight, App Store Connect, Google Play, and Play Console are
+trademarks of their respective owners. This is an independent open-source
+project; it is not affiliated with, endorsed, sponsored, or supported by
+Apple Inc. or Google LLC.
