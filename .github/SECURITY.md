@@ -1,88 +1,90 @@
-# Güvenlik
+# Security
 
-`magaza-mcp` mağaza hesaplarınıza erişen bir araçtır. Bu yüzden güvenlik
-tarafını baştan net tutuyoruz.
+`magaza-mcp` is a tool that accesses your store accounts. So we keep the
+security side explicit upfront.
 
-## Tasarım ilkeleri
+## Design principles
 
-### Anahtarlar Anahtar Zinciri'nde durur
+### Keys stay in the Keychain
 
-Apple `.p8` özel anahtarı ve Google servis hesabı JSON'u macOS Anahtar
-Zinciri'nde (Keychain) saklanır. Ayar dosyasına, ortam değişkenine veya repoya
-**yazılmaz**. Ayar dosyasına yalnızca hangi mağazaların açık olduğu bilgisi
-girer.
+The Apple `.p8` private key and the Google service account JSON are stored in
+the macOS Keychain. They are **never** written to the config file, an
+environment variable, or the repo. The config file only holds which stores
+are enabled.
 
-Anahtar Zinciri'ne erişilemeyen sistemlerde anahtarlar, izinleri `0600`'e
-kilitlenmiş yerel bir dosyaya düşülür.
+On systems without Keychain access, keys fall back to a local file locked
+down to `0600` permissions.
 
-### Sunucu yerelde çalışır
+### The server runs locally
 
-Sunucu istemcinizin yanında, kendi makinenizde, stdio üzerinden çalışır.
-Aradaki bir sunucuya, vekile veya bize ait bir servise bağlanmaz. Yaptığınız
-istekler doğrudan Apple ve Google'ın resmî API uçlarına gider. Araya kimse
-girmez.
+The server runs next to your client, on your own machine, over stdio. It
+doesn't connect to a server, proxy, or service of ours in between. Your
+requests go directly to Apple's and Google's official API endpoints. Nothing
+sits in the middle.
 
-### Telemetri yok
+### No telemetry
 
-Kullanım verisi, hata raporu, sürüm bildirimi veya "anonim istatistik" adı
-altında hiçbir şey toplanmaz ve hiçbir yere gönderilmez.
+No usage data, error reports, version pings, or "anonymous statistics" of any
+kind are collected or sent anywhere.
 
-### Veri değiştiren işlemler onay ister
+### Operations that modify data require approval
 
-POST, PATCH, PUT ve DELETE çağrıları ilk seferde yürümez. Sunucu önce ne
-yapılacağını, beklenen gövdeyi ve uyarısını döndürür; işlem ancak siz
-onayladıktan sonra, `onayla=true` ile tekrar çağrıldığında gerçekleşir.
+POST, PATCH, PUT, and DELETE calls don't run on the first attempt. The server
+first returns what it would do, the expected request body, and a warning; the
+operation only happens once you approve and it's called again with
+`onayla=true`.
 
-### Salt-okunur mod yazmayı kapatır
+### Read-only mode turns off writes
 
-`--salt-okunur` bayrağı (ya da `SALT_OKUNUR=1` ortam değişkeni) yazma yapan
-araçları — `appstore__yorum_yanitla`, `appstore__metin_guncelle` ve
-`play__yorum_yanitla` — araç listesinden tamamen çıkarır. Model onları göremez,
-dolayısıyla çağıramaz.
+The `--salt-okunur` flag (or the `SALT_OKUNUR=1` environment variable)
+removes every write-capable tool — `appstore__yorum_yanitla`,
+`appstore__metin_guncelle`, and `play__yorum_yanitla` — from the tool list
+entirely. The model can't see them, so it can't call them.
 
-Tek istisna `magaza__cagir`'dır. O listede kalır, çünkü katalogdaki bütün
-**okuma** uçlarına da bu araçtan gidiliyor; işaretlersek salt-okunur modda
-hiçbir şey okunamaz hale gelirdi. Yazma koruması bu araçta operasyon bazında
-uygulanır: veri değiştiren bir operasyon istendiğinde çağrı
-"sunucu salt-okunur modda" hatasıyla reddedilir, gövde hiç gönderilmez.
+The one exception is `magaza__cagir`. It stays in the list, because it's also
+the gateway to every **read** endpoint in the catalog; excluding it would
+make read-only mode unable to read anything. Write protection on this tool is
+enforced per operation: when a data-modifying operation is requested, the
+call is rejected with a "server is in read-only mode" error, and the request
+body is never sent.
 
-Üretim hesabınıza yalnızca okuma erişimi vermek istiyorsanız doğru yol budur.
+If you want to grant only read access to your production account, this is
+the way to do it.
 
-## Güvenlik açığı bildirimi
+## Reporting a vulnerability
 
-Bir güvenlik açığı bulduysanız **herkese açık issue açmayın.**
+If you find a vulnerability, **don't open a public issue.**
 
-Bildirimi GitHub Security Advisory üzerinden, özel olarak gönderin:
+Report it privately through GitHub Security Advisories:
 
-- Deponun **Security** sekmesi → **Report a vulnerability**
-- Doğrudan bağlantı:
+- The repo's **Security** tab → **Report a vulnerability**
+- Direct link:
   <https://github.com/tunaarikaya/magaza-mcp/security/advisories/new>
 
-Bildiriminizde şunlar yardımcı olur:
+It helps to include:
 
-- Açığın ne olduğu ve neye yol açtığı
-- Tekrarlanması için gereken adımlar
-- Etkilenen sürüm
-- Varsa önerdiğiniz çözüm
+- What the vulnerability is and what it leads to
+- Steps to reproduce it
+- The affected version
+- A suggested fix, if you have one
 
-**Bildirimde gerçek kimlik bilgisi paylaşmayın.** Key ID, Issuer ID, `.p8`
-içeriği, servis hesabı JSON'u, erişim token'ı veya gerçek paket adı
-göndermeyin. Gerekirse uydurma örneklerle anlatın.
+**Don't share real credentials in the report.** Don't send a Key ID, Issuer
+ID, `.p8` contents, service account JSON, access token, or a real package
+name. Use made-up examples if needed.
 
-Bildirimlere makul bir sürede dönüş yapmaya, doğrulanan açıkları düzeltip
-düzeltmeyi bir sürümle yayınlamaya çalışırız. Düzeltme yayınlanana kadar
-detayı açık etmemenizi rica ederiz.
+We try to respond to reports within a reasonable time, and to fix and ship
+verified vulnerabilities in a release. Please don't disclose details until a
+fix has shipped.
 
-## Desteklenen sürümler
+## Supported versions
 
-Güvenlik düzeltmeleri en son yayınlanan sürüm üzerinden verilir. Eski
-sürümlere geriye dönük yama çıkarılmaz.
+Security fixes are provided against the latest released version. No
+backported patches for older versions.
 
-## Anahtarınız sızdıysa
+## If your key has leaked
 
-1. Apple tarafında: App Store Connect → Kullanıcılar ve Erişim →
-   Entegrasyonlar bölümünden ilgili anahtarı iptal edin (revoke), yenisini
-   üretin.
-2. Google tarafında: Google Cloud Console → IAM & Admin → Service Accounts
-   bölümünden anahtarı silin, yeni bir anahtar oluşturun.
-3. Yerel kopyaları silin ve `magaza-mcp` kurulumunu yeni anahtarla tekrarlayın.
+1. On Apple's side: revoke the key from App Store Connect → Users and Access
+   → Integrations, and generate a new one.
+2. On Google's side: delete the key from Google Cloud Console → IAM & Admin →
+   Service Accounts, and create a new one.
+3. Delete local copies and redo the `magaza-mcp` setup with the new key.
