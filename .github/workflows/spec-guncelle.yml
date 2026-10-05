@@ -79,7 +79,7 @@ jobs:
 
       - name: Pull request aç
         if: steps.fark.outputs.degisti == 'evet'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: otomasyon/spec-guncelle
           delete-branch: true
