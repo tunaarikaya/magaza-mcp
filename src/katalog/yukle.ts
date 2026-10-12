@@ -128,6 +128,13 @@ const TURKCE: [string, string][] = [
   ["iade", "refund"],
   ["grup", "group"],
   ["yaş", "age"],
+  ["kanal", "track"],
+  ["yayın", "release"],
+  ["aşamalı", "rollout"],
+  ["kademeli", "rollout"],
+  ["listeleme", "listing"],
+  ["görsel", "image"],
+  ["testçi", "tester"],
 ];
 
 /**

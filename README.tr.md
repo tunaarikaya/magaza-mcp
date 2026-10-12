@@ -62,8 +62,8 @@ Google ile konuşur, anahtarın Anahtar Zinciri'nden dışarı çıkmaz.
 | [🧑‍💻 Elle kurulum](#-elle-kurulum) | Asistan kullanmıyorsan |
 | [🧩 İki mağaza karışır mı?](#-iki-mağaza-karışır-mı) | Hayır — nedeni burada |
 | [💬 Ne sorabilirsin](#-ne-sorabilirsin) | Örnek komutlar |
-| [🧰 Araçlar](#-araçlar) | 33 aracın tam listesi |
-| [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~6.000 token |
+| [🧰 Araçlar](#-araçlar) | 39 aracın tam listesi |
+| [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~8.500 token |
 | [🔑 Gereken izinler](#-gereken-izinler) | Apple ve Google tarafında ne şart |
 | [🔒 Güvenlik](#-güvenlik) | Anahtarlar, onay kapıları, telemetri |
 | [🩺 Sorun giderme](#-sorun-giderme) | Sık karşılaşılan hatalar |
@@ -270,10 +270,10 @@ belleğe bile alınmaz, modele gösterilmez, token harcamaz.
 
 | Kurulum | Yüklenen araç |
 | --- | --- |
-| İki mağaza | 33 |
+| İki mağaza | 39 |
 | Yalnızca App Store | 20 |
-| Yalnızca Play | 13 |
-| Salt-okunur (iki mağaza) | 25 |
+| Yalnızca Play | 19 |
+| Salt-okunur (iki mağaza) | 26 |
 
 **3. Çapraz araçlar yalnızca iki mağaza da açıkken var olur.** Tek mağazalı
 kurulumda hiç oluşturulmazlar — anlamları olmadığı için.
@@ -360,7 +360,7 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 </details>
 
 <details>
-<summary><b>Google Play — 10 araç</b> (<code>play__</code>)</summary>
+<summary><b>Google Play — 16 araç</b> (<code>play__</code>)</summary>
 
 <br>
 
@@ -375,7 +375,13 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 | `play__urunler` | Tek seferlik ürünleri listeler; yeni (`oneTimeProducts`) ve eski (`inappproducts`) modelin ikisini de dener. |
 | `play__satin_alma_dogrula` | Bir satın alma token'ını doğrular: abonelik durumu, onay durumu, bitiş tarihi, test satın alması mı. |
 | `play__iade_edilenler` | İptal edilmiş, iade edilmiş veya geri alınmış satın almaları listeler; iade sebebini ve kaynağını okunur hale getirir. Google yalnızca son 30 günü verir. |
-| `play__cokme_orani` | Android vitals çökme oranını, ölçüme giren farklı kullanıcı sayısıyla birlikte günlük olarak getirir. |
+| `play__cokme_orani` | Android vitals: çökme ve ANR oranları (Play'in kötü davranış eşiğinde baktığı "algılanan" oranlar dahil), eşik aşıldı mı, en sık çökme kümeleri ve stack trace'leri. Tek bir sürüm koduna daraltılabilir. |
+| `play__surum_yayinla` ✎ | AAB/APK'yı yükleyip bir kanala yayınlar, tek onayla: yükle → kanala ata → sürüm notları → commit. Yüzde verirsen kademeli yayın (örn. production %10). Bir adım düşerse hiçbir şey commit edilmez. |
+| `play__yayin_yonet` ✎ | Kanalı yönetir: rollout yüzdesini değiştir, durdur, sürdür, tamamla, sürümü başka kanala taşı (internal → production) ya da yalnızca sürüm notlarını güncelle. Önizlemede kanalın önceki ve sonraki hali görünür. |
+| `play__listeleme_guncelle` ✎ | Mağaza metinlerini (başlık, kısa ve tam açıklama, video) okur ya da bütün dillerde tek oturumda günceller. |
+| `play__gorsel_yukle` ✎ | Ekran görüntüsü, ikon veya öne çıkan görsel yükler; istersen eskilerini önce siler. |
+| `play__abonelik_fiyat_ayarla` ✎ | Bir temel planın fiyatını USD fiyattan bütün ülkelerde tek seferde ayarlar (Google'ın kendi çevirisiyle); üstüne ülkeye özel fiyat eklenebilir ya da yalnızca verdiğin ülkeler değişir. |
+| `play__fiyat_analizi` | Play için bölgesel fiyat önerir, hiçbir şey yazmaz: App Store'dakiyle aynı alım gücü mantığı, mağazada doğal görünen yerel fiyatlara yuvarlanır. |
 
 </details>
 
@@ -421,7 +427,7 @@ hiçbirini kullanmasan bile her mesajda yeniden ödenir.
 
 | | Araç | Her mesajda ödenen |
 | --- | --- | --- |
-| **magaza-mcp** | 33 | **~6.000 token** |
+| **magaza-mcp** | 39 | **~8.500 token** |
 | Hepsi ayrı araç olsaydı | 1440 | ~210.000 token |
 
 > [!NOTE]
@@ -473,8 +479,8 @@ analitik raporlar daha yüksek yetki ister.
   onayladıktan sonra `onayla=true` ile tekrarlandığında yürür. Bu **sunucu
   tarafında** uygulanır — istemcinin onay arayüzüne bağlı değildir.
 - **Salt-okunur mod.** `--salt-okunur` (veya `SALT_OKUNUR=1`) yazma yapan
-  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 33 araç
-  25'e düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
+  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 39 araç
+  26'ya düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
   kapısıdır — ama yazma operasyonu istendiğinde reddeder.
 - **Yol parametreleri doğrulanır.** Araçlara verilen kimlikler URL'e girmeden
   önce kodlanır; `.` ve `..` gibi yol gezinme denemeleri reddedilir. Mutlak
@@ -491,8 +497,8 @@ analitik raporlar daha yüksek yetki ister.
 - **Telemetri yok.** Hiçbir analitik, hata raporu veya kullanım verisi
   gönderilmez. Ağ trafiği yalnızca `api.appstoreconnect.apple.com`,
   `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com` ve
-  token için `oauth2.googleapis.com` adreslerine gider. Tek istisna
-  `appstore__fiyat_analizi`: herkese açık alım gücü verisini
+  token için `oauth2.googleapis.com` adreslerine gider. Tek istisna iki
+  `fiyat_analizi` aracı: herkese açık alım gücü verisini
   `api.worldbank.org`'dan okur (anahtarsız, senden hiçbir veri gitmez). Araya
   giren bir sunucu yoktur; veri doğrudan senin makinenle Apple ve Google
   arasında akar.

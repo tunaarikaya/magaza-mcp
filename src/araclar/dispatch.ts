@@ -142,7 +142,7 @@ const YAZMA_YONTEMLERI = new Set(["POST", "PATCH", "PUT", "DELETE"]);
  * çalışmaz. `:batchMigratePrices` gibi gerçek toplu yazma uçları bu listeye
  * girmesin diye ek adı tam olarak eşleştiriliyor.
  */
-const OKUYAN_POST_EKLERI = [":query", ":batchGet", ":search", ":lookup"];
+const OKUYAN_POST_EKLERI = [":query", ":batchGet", ":search", ":lookup", ":convertRegionPrices"];
 
 /**
  * İkinci emniyet: ekin adı kadar operasyonun kendi açıklaması da okuma
@@ -151,7 +151,7 @@ const OKUYAN_POST_EKLERI = [":query", ":batchGet", ":search", ":lookup"];
  * "Reads / Queries / Searches / Gets / Lists" ile başlamıyorsa yazma sayıp
  * onay isteriz. Bugünkü 19 ucun 19'u bu kalıba uyuyor.
  */
-const OKUMA_OZETI = /^(read|quer|search|look ?up|get|list|fetch|retriev)/i;
+const OKUMA_OZETI = /^(read|quer|search|look ?up|get|list|fetch|retriev|calculat)/i;
 
 function yazmaIslemiMi(op: Operasyon): boolean {
   if (!YAZMA_YONTEMLERI.has(op.yontem)) return false;
@@ -215,7 +215,8 @@ export function dispatchAraclari(): Arac[] {
       "yöntemini döndürür. Sonucu magaza__cagir ile çalıştırabilirsin. " +
       "Örnek sorgular: 'subscription price', 'testflight tester', 'crash rate'. " +
       "Abonelik/IAP fiyatı, abonelik kurulumu ve yaş derecelendirmesi için " +
-      "hazır appstore__ araçları var; onları tercih et.",
+      "hazır appstore__ araçları; Play'de sürüm yayınlama, rollout, mağaza " +
+      "metni, görsel ve abonelik fiyatı için hazır play__ araçları var. Onları tercih et.",
     girdiSemasi: {
       type: "object",
       properties: {
@@ -338,6 +339,14 @@ export function dispatchAraclari(): Arac[] {
             (yakin.length
               ? `\nBunlar mı demek istedin?\n  ${yakin.map((y) => y.ad).join("\n  ")}`
               : "\nmagaza__endpoint_ara ile arayabilirsin."),
+        );
+      }
+
+      // Katalogdaki yükleme uçları ham dosya baytı ister; JSON gövdeyle hep düşüyordu.
+      if (magaza === "play" && /\.upload[a-z]*$/i.test(op.ad)) {
+        throw new Error(
+          `'${op.ad}' dosya yükler; magaza__cagir dosya gönderemez. AAB/APK için ` +
+            "play__surum_yayinla, ekran görüntüsü ve ikon için play__gorsel_yukle kullan.",
         );
       }
 

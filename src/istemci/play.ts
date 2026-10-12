@@ -36,14 +36,42 @@ export async function cagir({
     adres.searchParams.set(ad, String(deger));
   }
 
-  const yanit = await fetch(adres, {
-    method: yontem,
-    headers: {
-      authorization: `Bearer ${await gecerliToken()}`,
-      "content-type": "application/json",
-    },
-    body: govde === undefined ? undefined : JSON.stringify(govde),
-  });
+  return gonder(adres, yontem, yol, "application/json", govde === undefined ? undefined : JSON.stringify(govde));
+}
+
+/**
+ * Dosya yükler (AAB, APK, ekran görüntüsü).
+ *
+ * Google'da yükleme uçları ayrı bir kökte: `/upload/androidpublisher/...`
+ * ve `uploadType=media`. Gövde dosyanın ham baytları; JSON'a sarılırsa Google
+ * dosyayı bozuk sayıyor. Genel `cagir` bunu yapamadığı için katalogdaki
+ * yükleme operasyonları hep düşüyordu.
+ */
+export async function yukle(yol: string, veri: Uint8Array<ArrayBuffer>, icerikTuru: string): Promise<unknown> {
+  const adres = new URL(`${TABANLAR.publisher}/upload${yol}`);
+  adres.searchParams.set("uploadType", "media");
+  return gonder(adres, "POST", yol, icerikTuru, veri);
+}
+
+async function gonder(
+  adres: URL,
+  yontem: string,
+  yol: string,
+  icerikTuru: string,
+  govde: string | Uint8Array<ArrayBuffer> | undefined,
+): Promise<unknown> {
+  // 429'da Google isteği işlememiştir; yazmayı bile tekrarlamak güvenli.
+  let yanit: Response;
+  for (let deneme = 0; ; deneme++) {
+    yanit = await fetch(adres, {
+      method: yontem,
+      headers: { authorization: `Bearer ${await gecerliToken()}`, "content-type": icerikTuru },
+      body: govde,
+    });
+    if (yanit.status !== 429 || deneme >= 3) break;
+    const bekle = Number(yanit.headers.get("retry-after")) || 2 ** deneme * 2;
+    await new Promise((r) => setTimeout(r, Math.min(bekle, 60) * 1000));
+  }
 
   const metin = await yanit.text();
   if (!yanit.ok) throw new Error(hataMesaji(yanit.status, metin, yol));
@@ -127,12 +155,32 @@ function ipuclari(durum: number, ayrinti: string, yol: string): string {
     return "Kaynak bulunamadı. Paket adı (packageName) doğru yazıldı mı?";
   }
 
-  if (durum === 400 && ayrinti.includes("package")) {
+  // Yayın commit'inde en sık düşülen üç tuzak; Google'ın mesajı ne yapılacağını söylemiyor.
+  if (ayrinti.includes("changesNotSentForReview")) {
+    return (
+      "Bu uygulamada değişiklikler otomatik incelemeye gönderilemiyor (Play Console'da " +
+      "'yönetilen yayın' açık olabilir). incelemeye_gonder=false ile tekrar dene; " +
+      "sonra Play Console'dan incelemeye gönder."
+    );
+  }
+  if (/only releases with status draft/i.test(ayrinti)) {
+    return (
+      "Uygulama henüz hiç yayınlanmamış (taslak uygulama). Bu durumda Play yalnızca " +
+      "taslak sürüm kabul eder: taslak=true ile tekrar dene, ilk yayını Play Console'dan yap."
+    );
+  }
+  if (/version code .* (has )?already been used/i.test(ayrinti)) {
+    return "Bu versionCode daha önce yüklenmiş. Uygulamanın versionCode'unu artırıp yeniden derle.";
+  }
+
+  if (durum === 400 && /package ?name/i.test(ayrinti) && /invalid|not found|unknown/i.test(ayrinti)) {
     return "Paket adı geçersiz görünüyor. 'com.sirket.uygulama' biçiminde olmalı.";
   }
 
   if (durum === 409) {
-    return "Çakışma — büyük ihtimalle aynı anda açık başka bir düzenleme oturumu var.";
+    return yol.includes("/edits")
+      ? "Çakışma — aynı anda açık başka bir düzenleme oturumu commit edilmiş olabilir (CI, Play Console). Tekrar dene."
+      : "Çakışma — kaynak zaten var ya da şu anki durumu bu işleme izin vermiyor.";
   }
 
   if (durum === 429) {

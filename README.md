@@ -62,8 +62,8 @@ directly to Apple and Google, and your keys never leave your Keychain.
 | [🧑‍💻 Manual setup](#-manual-setup) | If you're not using an assistant |
 | [🧩 Do the two stores mix up?](#-do-the-two-stores-mix-up) | No — here's why |
 | [💬 What you can ask](#-what-you-can-ask) | Example prompts |
-| [🧰 Tools](#-tools) | Full list of all 33 tools |
-| [🌐 Full API access](#-full-api-access) | 1,440 operations, ~6,000 tokens |
+| [🧰 Tools](#-tools) | Full list of all 39 tools |
+| [🌐 Full API access](#-full-api-access) | 1,440 operations, ~8,500 tokens |
 | [🔑 Required permissions](#-required-permissions) | What Apple and Google require |
 | [🔒 Security](#-security) | Keys, approval gates, telemetry |
 | [🩺 Troubleshooting](#-troubleshooting) | Common errors |
@@ -274,10 +274,10 @@ model, and cost zero tokens.
 
 | Setup | Tools loaded |
 | --- | --- |
-| Both stores | 33 |
+| Both stores | 39 |
 | App Store only | 20 |
-| Play only | 13 |
-| Read-only (both stores) | 25 |
+| Play only | 19 |
+| Read-only (both stores) | 26 |
 
 **3. Cross-store tools only exist when both stores are enabled.** In a
 single-store setup they're never created at all — they'd have no meaning.
@@ -363,7 +363,7 @@ These tools only load when both stores are connected.
 </details>
 
 <details>
-<summary><b>Google Play — 10 tools</b> (<code>play__</code>)</summary>
+<summary><b>Google Play — 16 tools</b> (<code>play__</code>)</summary>
 
 <br>
 
@@ -378,7 +378,13 @@ These tools only load when both stores are connected.
 | `play__urunler` | Lists one-time products; tries both the new (`oneTimeProducts`) and legacy (`inappproducts`) models. |
 | `play__satin_alma_dogrula` | Verifies a purchase token: subscription status, acknowledgment status, expiry date, whether it's a test purchase. |
 | `play__iade_edilenler` | Lists cancelled, refunded, or charged-back purchases; turns the refund reason and source into something readable. Google only returns the last 30 days. |
-| `play__cokme_orani` | Fetches Android vitals crash rate day by day, along with the number of distinct users in the measurement. |
+| `play__cokme_orani` | Android vitals: crash and ANR rates (including the user-perceived rates Play uses for its bad-behavior thresholds), whether a threshold is exceeded, and the most frequent crash clusters with stack traces. Can be narrowed to one version code. |
+| `play__surum_yayinla` ✎ | Uploads an AAB/APK and releases it to a track in one approval: upload → assign to track → release notes → commit. Give a percentage for a staged rollout (e.g. production 10%). If anything fails, nothing is committed. |
+| `play__yayin_yonet` ✎ | Manages a track: change the rollout %, halt, resume, complete, promote a release to another track (internal → production), or update only the release notes. The preview shows the track before and after. |
+| `play__listeleme_guncelle` ✎ | Reads or updates store listing text (title, short and full description, video) for every language in one edit. |
+| `play__gorsel_yukle` ✎ | Uploads screenshots, the icon, or the feature graphic, optionally replacing the existing ones. |
+| `play__abonelik_fiyat_ayarla` ✎ | Sets a base plan's price in every country at once from a USD price (Google's own conversion), with optional country-specific prices on top, or changes only the countries you list. |
+| `play__fiyat_analizi` | Regional pricing suggestion for Play, writes nothing: same purchasing-power logic as the App Store version, rounded to natural-looking local prices. |
 
 </details>
 
@@ -426,7 +432,7 @@ any of them.
 
 | | Tools | Paid on every message |
 | --- | --- | --- |
-| **magaza-mcp** | 33 | **~6,000 tokens** |
+| **magaza-mcp** | 39 | **~8,500 tokens** |
 | If all were separate tools | 1,440 | ~210,000 tokens |
 
 > [!NOTE]
@@ -483,7 +489,7 @@ some analytics reports need higher privileges.
   the client's approval UI.
 - **Read-only mode.** `--salt-okunur` (or `SALT_OKUNUR=1`) removes every
   write-capable tool from the list entirely: the model can't see them or call
-  them. 33 tools become 25. `magaza__cagir` stays in the list because it's
+  them. 39 tools become 26. `magaza__cagir` stays in the list because it's
   also the single gateway for read endpoints in the catalog — but it refuses
   write operations when read-only mode is on.
 - **Path parameters are validated.** IDs passed to tools are encoded before
@@ -502,7 +508,7 @@ some analytics reports need higher privileges.
   Network traffic only goes to `api.appstoreconnect.apple.com`,
   `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com`,
   and `oauth2.googleapis.com` for tokens. The one exception is
-  `appstore__fiyat_analizi`, which reads public purchasing-power figures from
+  the two `fiyat_analizi` tools, which read public purchasing-power figures from
   `api.worldbank.org` (no key, nothing of yours is sent). There's no server in
   the middle; data flows directly between your machine and Apple/Google.
 

@@ -10,10 +10,10 @@
 import { cagir } from "../istemci/play.js";
 import type { Arac } from "./tip.js";
 
-const metin = (aciklama: string) => ({ type: "string", description: aciklama });
-const sayi = (aciklama: string) => ({ type: "number", description: aciklama });
+export const metin = (aciklama: string) => ({ type: "string", description: aciklama });
+export const sayi = (aciklama: string) => ({ type: "number", description: aciklama });
 
-const paketAlani = metin("Uygulamanın paket adı, örn. com.sirket.uygulama.");
+export const paketAlani = metin("Uygulamanın paket adı, örn. com.sirket.uygulama.");
 
 /**
  * Bir kullanıcı değerini URL yolunun içine güvenle gömer.
@@ -45,7 +45,7 @@ export function yolParcasi(deger: unknown, alan: string): string {
  * yerine Intl'e bırakıyoruz, yoksa 3 haneli para birimlerinde yuvarlayıp
  * yanlış fiyat gösteririz.
  */
-function paraBicimle(para: any): string | undefined {
+export function paraBicimle(para: any): string | undefined {
   if (!para || !para.currencyCode) return undefined;
   const deger = Number(para.units || 0) + Number(para.nanos || 0) / 1e9;
   try {
@@ -96,7 +96,7 @@ const IADE_KAYNAGI: Record<number, string> = {
 };
 
 /** Geçici bir düzenleme oturumu açar, işi yapar, oturumu bırakır. */
-async function oturumda<T>(
+export async function oturumda<T>(
   packageName: string,
   is: (editId: string) => Promise<T>,
 ): Promise<T> {
@@ -134,6 +134,31 @@ async function oturumda<T>(
       /* oturum zaten düşmüş olabilir */
     }
   }
+}
+
+/**
+ * Sayfalı bir listeyi istenen adede kadar toplar.
+ *
+ * Play iki farklı sayfalama kullanıyor: yeni uçlar `pageToken` /
+ * `nextPageToken`, yorumlar ve iadeler `token` / `tokenPagination`. Tek
+ * sayfayla yetinmek 50'den fazla aboneliği ya da 100'den fazla iadeyi
+ * sessizce kesiyordu.
+ */
+async function sayfala(
+  yol: string,
+  sorgu: Record<string, unknown>,
+  alan: string,
+  limit: number,
+  eski = false,
+): Promise<{ kayitlar: any[]; devam_var: boolean }> {
+  const kayitlar: any[] = [];
+  let sayfa: string | undefined;
+  do {
+    const y: any = await cagir({ yontem: "GET", yol, sorgu: { ...sorgu, [eski ? "token" : "pageToken"]: sayfa } });
+    kayitlar.push(...(y[alan] ?? []));
+    sayfa = eski ? y.tokenPagination?.nextPageToken : y.nextPageToken;
+  } while (sayfa && kayitlar.length < limit);
+  return { kayitlar: kayitlar.slice(0, limit), devam_var: !!sayfa };
 }
 
 export function playAraclari(): Arac[] {
@@ -249,14 +274,18 @@ export function playAraclari(): Arac[] {
         required: ["paket_adi"],
       },
       async calistir(girdi) {
-        const sorgu: Record<string, unknown> = { maxResults: girdi.limit ?? 50 };
+        const limit = Math.max(1, Number(girdi.limit ?? 50));
+        const sorgu: Record<string, unknown> = { maxResults: Math.min(100, limit) };
         if (girdi.dil) sorgu.translationLanguage = girdi.dil;
 
-        const yanit: any = await cagir({
-          yontem: "GET",
-          yol: `/androidpublisher/v3/applications/${yolParcasi(girdi.paket_adi, "paket_adi")}/reviews`,
+        const { kayitlar } = await sayfala(
+          `/androidpublisher/v3/applications/${yolParcasi(girdi.paket_adi, "paket_adi")}/reviews`,
           sorgu,
-        });
+          "reviews",
+          limit,
+          true,
+        );
+        const yanit = { reviews: kayitlar };
 
         const zaman = (damga: any) =>
           damga?.seconds
@@ -325,6 +354,10 @@ export function playAraclari(): Arac[] {
       async calistir(girdi) {
         const paket = yolParcasi(girdi.paket_adi, "paket_adi");
         const yorumId = yolParcasi(girdi.yorum_id, "yorum_id");
+        // Google sınırı onaydan SONRA reddediyordu; kullanıcı boşuna onay vermiş oluyordu.
+        const uzunluk = String(girdi.yanit ?? "").length;
+        if (!uzunluk) throw new Error("Yanıt metni boş olamaz.");
+        if (uzunluk > 350) throw new Error(`Yanıt ${uzunluk} karakter; Play sınırı 350.`);
 
         /*
          * Onay kapısı. Yorum metinleri güvenilmez girdidir: bir kullanıcı
@@ -379,14 +412,13 @@ export function playAraclari(): Arac[] {
         required: ["paket_adi"],
       },
       async calistir(girdi) {
-        const yanit: any = await cagir({
-          yontem: "GET",
-          yol: `/androidpublisher/v3/applications/${yolParcasi(girdi.paket_adi, "paket_adi")}/subscriptions`,
-          sorgu: {
-            pageSize: girdi.limit ?? 50,
-            showArchived: girdi.arsivi_dahil_et ? true : undefined,
-          },
-        });
+        const { kayitlar, devam_var } = await sayfala(
+          `/androidpublisher/v3/applications/${yolParcasi(girdi.paket_adi, "paket_adi")}/subscriptions`,
+          { pageSize: 100, showArchived: girdi.arsivi_dahil_et ? true : undefined },
+          "subscriptions",
+          Math.max(1, Number(girdi.limit ?? 50)),
+        );
+        const yanit = { subscriptions: kayitlar, devam_var };
 
         return {
           abonelikler: (yanit.subscriptions || []).map((a: any) => ({
@@ -407,8 +439,8 @@ export function playAraclari(): Arac[] {
               diger_bolgeler: digerBolgeler(p.otherRegionsConfig),
             })),
           })),
-          // Sayfalama: bir sonraki sayfa için limit'i artır.
-          devam_var: !!yanit.nextPageToken,
+          // Daha fazlası için limit'i artır.
+          devam_var: yanit.devam_var,
         };
       },
     },
@@ -500,24 +532,27 @@ export function playAraclari(): Arac[] {
 
         let ilkHata: unknown;
         try {
-          const yeni: any = await cagir({
-            yontem: "GET",
-            yol: `${taban}/oneTimeProducts`,
-            sorgu: { pageSize: 100 },
-          });
+          const { kayitlar, devam_var } = await sayfala(`${taban}/oneTimeProducts`, { pageSize: 100 }, "oneTimeProducts", 1000);
+          const yeni = { oneTimeProducts: kayitlar, devam_var };
 
           return {
             model: "oneTimeProducts (yeni)",
             urunler: (yeni.oneTimeProducts || []).map((u: any) => ({
               urun_id: u.productId,
               isim: u.listings?.[0]?.title,
-              secenekler: (u.purchaseOptions || []).map((s: any) => ({
-                secenek_id: s.purchaseOptionId,
-                durum: s.state,
-                tur: s.rentOption ? "kiralama" : "satın alma",
-              })),
+              secenekler: (u.purchaseOptions || []).map((s: any) => {
+                const fiyatlar = s.regionalPricingAndAvailabilityConfigs ?? [];
+                const abd = fiyatlar.find((f: any) => f.regionCode === "US");
+                return {
+                  secenek_id: s.purchaseOptionId,
+                  durum: s.state,
+                  tur: s.rentOption ? "kiralama" : "satın alma",
+                  ulke_sayisi: fiyatlar.length,
+                  abd_fiyati: paraBicimle(abd?.price),
+                };
+              }),
             })),
-            devam_var: !!yeni.nextPageToken,
+            devam_var: yeni.devam_var,
           };
         } catch (hata) {
           ilkHata = hata;
@@ -656,20 +691,23 @@ export function playAraclari(): Arac[] {
         required: ["paket_adi"],
       },
       async calistir(girdi) {
-        const yanit: any = await cagir({
-          yontem: "GET",
-          yol:
-            `/androidpublisher/v3/applications/${yolParcasi(girdi.paket_adi, "paket_adi")}` +
+        const limit = Math.max(1, Number(girdi.limit ?? 100));
+        const { kayitlar: iadeler } = await sayfala(
+          `/androidpublisher/v3/applications/${yolParcasi(girdi.paket_adi, "paket_adi")}` +
             "/purchases/voidedpurchases",
-          sorgu: {
-            maxResults: girdi.limit ?? 100,
+          {
+            maxResults: Math.min(1000, limit),
             // type varsayılanı 0'dır ve SADECE tek seferlik ürün iadelerini
             // döndürür — abonelik iadeleri sessizce listenin dışında kalır.
             // Bu aracın asıl işi "erişimi kesmeli miyim" olduğuna göre
             // abonelikler şart; o yüzden varsayılanı 1 yapıyoruz.
             type: girdi.sadece_urunler ? 0 : 1,
           },
-        });
+          "voidedPurchases",
+          limit,
+          true,
+        );
+        const yanit = { voidedPurchases: iadeler };
 
         return {
           adet: (yanit.voidedPurchases || []).length,
@@ -699,85 +737,125 @@ export function playAraclari(): Arac[] {
     {
       ad: "play__cokme_orani",
       aciklama:
-        "Android vitals çökme oranını getirir (Play Developer Reporting). " +
-        "'Uygulamam neden çöküyor, ne zamandan beri arttı' sorularının başlangıcı.",
+        "Android vitals: çökme ve ANR oranları ile en sık hatalar (stack trace " +
+        "dahil). 'Uygulamam neden çöküyor, hangi sürümde, Play'in kötü davranış " +
+        "eşiğini aştım mı' soruları için. surum_kodu verilirse yalnızca o sürüm.",
       girdiSemasi: {
         type: "object",
         properties: {
           paket_adi: paketAlani,
           gun: sayi("Kaç günlük veri (varsayılan 14)."),
+          surum_kodu: sayi("Yalnızca bu versionCode."),
+          hata_sayisi: sayi("Kaç hata kümesi dönsün (varsayılan 5); ilk 3'ünün stack trace'i eklenir."),
         },
         required: ["paket_adi"],
       },
       async calistir(girdi) {
         const gun = Math.max(1, Number(girdi.gun ?? 14));
+        const uygulama = `/v1beta1/apps/${yolParcasi(girdi.paket_adi, "paket_adi")}`;
+        const surum = girdi.surum_kodu !== undefined ? Number(girdi.surum_kodu) : undefined;
+        if (surum !== undefined && !Number.isInteger(surum)) throw new Error("surum_kodu tam sayı olmalı.");
+        const suzgec = surum !== undefined ? `versionCode = ${surum}` : undefined;
 
         /**
-         * DAILY toplama için Google'ın desteklediği TEK saat dilimi
-         * America/Los_Angeles'tır (discovery: "the default and only
-         * supported timezone is America/Los_Angeles"). UTC takvimiyle gün
-         * hesaplamak, UTC gece yarısını geçtiğimiz ama Los Angeles'ta hâlâ
-         * dün olan saatlerde aralığın sonunu geleceğe taşır.
+         * Aralığın sonu Google'ın "şu güne kadar veri hazır" dediği gün.
+         * Bugünü (Los Angeles) vermek son 1-2 günü eksik ya da boş getiriyordu.
+         * DAILY'de tek geçerli saat dilimi America/Los_Angeles.
          */
-        const laTarihi = (ms: number) => {
-          const [yil, ay, gunu] = new Intl.DateTimeFormat("en-CA", {
-            timeZone: "America/Los_Angeles",
-            year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-          })
-            .format(new Date(ms))
-            .split("-")
-            .map(Number);
-          return { year: yil, month: ay, day: gunu };
-        };
+        const tazelik: any = await cagir({ api: "reporting", yontem: "GET", yol: `${uygulama}/crashRateMetricSet` });
+        const son = tazelik.freshnessInfo?.freshnesses?.find((f: any) => f.aggregationPeriod === "DAILY")?.latestEndTime;
+        const bitis = son ? new Date(Date.UTC(son.year, son.month - 1, son.day)) : new Date();
+        const baslangic = new Date(bitis.getTime() - gun * 86400000);
+        const gunu = (d: Date) => ({ year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() });
 
-        const simdi = Date.now();
-
-        const yanit: any = await cagir({
-          api: "reporting",
-          yontem: "POST",
-          yol: `/v1beta1/apps/${yolParcasi(girdi.paket_adi, "paket_adi")}/crashRateMetricSet:query`,
-          govde: {
-            timelineSpec: {
-              aggregationPeriod: "DAILY",
-              // DAILY'de saat/dakika/saniye alanları BOŞ olmalı, yoksa
-              // doğrulama hatası döner — sadece yıl/ay/gün gönderiyoruz.
-              // startTime dahil, endTime hariç: bugünü dışarıda bırakmak
-              // hem kuralı sağlar hem de yarım günün oranı bozmasını önler.
-              startTime: laTarihi(simdi - gun * 86400000),
-              endTime: laTarihi(simdi),
+        const sorgula = (kume: string, metrikler: string[]) =>
+          cagir({
+            api: "reporting",
+            yontem: "POST",
+            yol: `${uygulama}/${kume}:query`,
+            govde: {
+              timelineSpec: {
+                aggregationPeriod: "DAILY",
+                startTime: { ...gunu(baslangic), timeZone: { id: "America/Los_Angeles" } },
+                endTime: { ...gunu(bitis), timeZone: { id: "America/Los_Angeles" } },
+              },
+              metrics: metrikler,
+              filter: suzgec,
+              pageSize: Math.min(1000, gun + 1),
             },
-            // Discovery'de crashRateMetricSet için geçerli metrikler.
-            metrics: ["crashRate", "distinctUsers"],
-            // dimensions ve pageSize zorunlu değil; dilim vermeyince
-            // uygulama geneli döner, pageSize boşsa en çok 1000 satır.
-            pageSize: Math.min(1000, gun + 1),
-          },
-        });
+          }) as Promise<any>;
+
+        const [cokme, anr, hatalar] = await Promise.all([
+          sorgula("crashRateMetricSet", ["crashRate", "userPerceivedCrashRate", "distinctUsers"]),
+          sorgula("anrRateMetricSet", ["anrRate", "userPerceivedAnrRate"]),
+          cagir({
+            api: "reporting",
+            yontem: "GET",
+            yol: `${uygulama}/errorIssues:search`,
+            sorgu: { pageSize: Math.min(50, Number(girdi.hata_sayisi ?? 5)), orderBy: "errorReportCount desc", filter: suzgec },
+          }) as Promise<any>,
+        ]);
+
+        // MetricValue.decimalValue.value metin ve kesir: "0.0123" = %1.23.
+        const gunler = new Map<string, Record<string, unknown>>();
+        for (const satir of [...(cokme.rows ?? []), ...(anr.rows ?? [])]) {
+          const t = satir.startTime;
+          const tarih = `${t.year}-${String(t.month).padStart(2, "0")}-${String(t.day).padStart(2, "0")}`;
+          const kayit = gunler.get(tarih) ?? { tarih };
+          for (const m of satir.metrics ?? []) if (m?.metric) kayit[m.metric] = m.decimalValue?.value;
+          gunler.set(tarih, kayit);
+        }
+
+        const ortalama = (alan: string) => {
+          const d = [...gunler.values()].map((g) => Number(g[alan])).filter(Number.isFinite);
+          return d.length ? d.reduce((a, b) => a + b, 0) / d.length : undefined;
+        };
+        const yuzde = (x?: number) => (x === undefined ? undefined : `%${(x * 100).toFixed(2)}`);
+        const algilananCokme = ortalama("userPerceivedCrashRate");
+        const algilananAnr = ortalama("userPerceivedAnrRate");
+
+        const kumeler: any[] = hatalar.errorIssues ?? [];
+        const izler = await Promise.all(
+          kumeler.slice(0, 3).map((k) =>
+            (cagir({
+              api: "reporting",
+              yontem: "GET",
+              yol: `${uygulama}/errorReports:search`,
+              sorgu: { pageSize: 1, filter: `errorIssueId = ${String(k.name).split("/").pop()}` },
+            }) as Promise<any>).then(
+              (r) => r.errorReports?.[0]?.reportText?.slice(0, 1500),
+              () => undefined,
+            ),
+          ),
+        );
 
         return {
-          saat_dilimi: "America/Los_Angeles (Google'ın DAILY için tek seçeneği)",
-          gun_sayisi: (yanit.rows || []).length,
-          gunler: (yanit.rows || []).map((s: any) => {
-            const t = s.startTime;
-            const olcumler: Record<string, unknown> = {};
-            for (const m of s.metrics || []) {
-              // MetricValue.decimalValue bir google.type.Decimal'dir;
-              // sayısal değer `value` alanında metin olarak gelir.
-              if (m?.metric) olcumler[m.metric] = m.decimalValue?.value;
-            }
-            return {
-              tarih: t
-                ? `${t.year}-${String(t.month).padStart(2, "0")}-${String(t.day).padStart(2, "0")}`
-                : undefined,
-              ...olcumler,
-            };
-          }),
-          not:
-            "crashRate = o gün en az bir çökme yaşayan tekil kullanıcıların " +
-            "yüzdesi; distinctUsers paydadır ve Google tarafından yuvarlanır. " +
-            "Son 1-2 günün verisi henüz tam olmayabilir.",
+          aralik: `${gunu(baslangic).year}-${gunu(baslangic).month}-${gunu(baslangic).day} → son hazır gün (Los Angeles)`,
+          ozet: {
+            algilanan_cokme: yuzde(algilananCokme),
+            algilanan_anr: yuzde(algilananAnr),
+            // Google'ın uygulama geneli "kötü davranış" eşikleri; aşılırsa mağazada görünürlük düşer.
+            esik_asildi:
+              algilananCokme === undefined && algilananAnr === undefined
+                ? undefined
+                : (algilananCokme ?? 0) > 0.0109 || (algilananAnr ?? 0) > 0.0047,
+            esikler: "Algılanan çökme %1.09, algılanan ANR %0.47",
+          },
+          gunler: [...gunler.values()],
+          en_sik_hatalar: kumeler.map((k, i) => ({
+            tur: k.type,
+            sebep: k.cause,
+            konum: k.location,
+            rapor: Number(k.errorReportCount),
+            kullanici: Number(k.distinctUsers),
+            surumler: `${k.firstAppVersion?.versionCode ?? "?"} → ${k.lastAppVersion?.versionCode ?? "?"}`,
+            son_gorulme: k.lastErrorReportTime,
+            konsol: k.issueUri,
+            stack_trace: izler[i],
+          })),
+          not: gunler.size
+            ? undefined
+            : "Oran verisi yok: Google, günlük yeterli kullanıcısı olmayan uygulamalarda oran yayınlamaz. Hata kümeleri yine de listelenir.",
         };
       },
     },

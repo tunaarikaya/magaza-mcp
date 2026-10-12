@@ -1,8 +1,8 @@
 /**
  * Araç listesi testleri.
  *
- * Buradaki sayılar README'de ve AGENTS.md'de yazılı: "iki mağazada 33, tek
- * mağazada 20/13, salt-okunurda 25". Bir araç eklenip dokümanı güncellenmezse
+ * Buradaki sayılar README'de ve AGENTS.md'de yazılı: "iki mağazada 39, tek
+ * mağazada 20/19, salt-okunurda 26". Bir araç eklenip dokümanı güncellenmezse
  * bu testler uyarır.
  *
  * Asıl önemlisi kapsam: seçilmeyen mağazanın araçlarının hiç yüklenmemesi ve
@@ -39,12 +39,12 @@ afterEach(() => {
 const adlar = (araclar: { ad: string }[]) => araclar.map((a) => a.ad);
 
 describe("araclariTopla", () => {
-  it("iki mağaza açıkken 33 araç yükler", () => {
-    assert.equal(ortamda("appstore,play").length, 33);
+  it("iki mağaza açıkken 39 araç yükler", () => {
+    assert.equal(ortamda("appstore,play").length, 39);
   });
 
   it("MAGAZALAR verilmezse iki mağaza da açıktır", () => {
-    assert.equal(ortamda(undefined).length, 33);
+    assert.equal(ortamda(undefined).length, 39);
   });
 
   it("yalnızca App Store'da 20 araç yükler, hiç play__ aracı olmaz", () => {
@@ -53,9 +53,9 @@ describe("araclariTopla", () => {
     assert.equal(adlar(araclar).filter((a) => a.startsWith("play__")).length, 0);
   });
 
-  it("yalnızca Play'de 13 araç yükler, hiç appstore__ aracı olmaz", () => {
+  it("yalnızca Play'de 19 araç yükler, hiç appstore__ aracı olmaz", () => {
     const araclar = ortamda("play");
-    assert.equal(araclar.length, 13);
+    assert.equal(araclar.length, 19);
     assert.equal(adlar(araclar).filter((a) => a.startsWith("appstore__")).length, 0);
   });
 
@@ -71,7 +71,7 @@ describe("araclariTopla", () => {
 
   it("salt-okunur modda yazma araçları listeye hiç girmez", () => {
     const araclar = ortamda("appstore,play", true);
-    assert.equal(araclar.length, 25);
+    assert.equal(araclar.length, 26);
 
     for (const ad of [
       "appstore__yorum_yanitla",
@@ -79,6 +79,8 @@ describe("araclariTopla", () => {
       "appstore__abonelik_fiyat_ayarla",
       "appstore__yas_derecelendirme",
       "play__yorum_yanitla",
+      "play__surum_yayinla",
+      "play__yayin_yonet",
     ]) {
       assert.ok(!adlar(araclar).includes(ad), `${ad} salt-okunur modda yüklenmemeli`);
     }

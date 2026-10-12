@@ -7,7 +7,7 @@
  */
 import { cagir as appleCagir } from "../istemci/apple.js";
 import { cagir as playCagir } from "../istemci/play.js";
-import { yolParcasi } from "./play.js";
+import { paraBicimle, yolParcasi } from "./play.js";
 import { acikMagazalar, type Arac } from "./tip.js";
 
 const metin = (aciklama: string) => ({ type: "string", description: aciklama });
@@ -313,11 +313,11 @@ export function ortakAraclar(): Arac[] {
                   isim: a.listings?.[0]?.title,
                   sure:
                     p.autoRenewingBasePlanType?.billingPeriodDuration ??
-                    p.prepaidBasePlanType?.billingPeriodDuration,
+                    p.prepaidBasePlanType?.billingPeriodDuration ??
+                    p.installmentsBasePlanType?.billingPeriodDuration,
                   durum: p.state,
-                  fiyat: bolge?.price
-                    ? `${(Number(bolge.price.units || 0) + Number(bolge.price.nanos || 0) / 1e9).toFixed(2)} ${bolge.price.currencyCode}`
-                    : undefined,
+                  // toFixed(2) JPY'de kuruş uyduruyor, TND'de (3 hane) yuvarlıyordu.
+                  fiyat: paraBicimle(bolge?.price),
                 };
               }),
             );
