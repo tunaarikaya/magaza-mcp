@@ -62,8 +62,8 @@ Google ile konuşur, anahtarın Anahtar Zinciri'nden dışarı çıkmaz.
 | [🧑‍💻 Elle kurulum](#-elle-kurulum) | Asistan kullanmıyorsan |
 | [🧩 İki mağaza karışır mı?](#-iki-mağaza-karışır-mı) | Hayır — nedeni burada |
 | [💬 Ne sorabilirsin](#-ne-sorabilirsin) | Örnek komutlar |
-| [🧰 Araçlar](#-araçlar) | 27 aracın tam listesi |
-| [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~4.000 token |
+| [🧰 Araçlar](#-araçlar) | 32 aracın tam listesi |
+| [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~6.000 token |
 | [🔑 Gereken izinler](#-gereken-izinler) | Apple ve Google tarafında ne şart |
 | [🔒 Güvenlik](#-güvenlik) | Anahtarlar, onay kapıları, telemetri |
 | [🩺 Sorun giderme](#-sorun-giderme) | Sık karşılaşılan hatalar |
@@ -270,8 +270,8 @@ belleğe bile alınmaz, modele gösterilmez, token harcamaz.
 
 | Kurulum | Yüklenen araç |
 | --- | --- |
-| İki mağaza | 27 |
-| Yalnızca App Store | 14 |
+| İki mağaza | 32 |
+| Yalnızca App Store | 19 |
 | Yalnızca Play | 13 |
 | Salt-okunur (iki mağaza) | 24 |
 
@@ -333,7 +333,7 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 </details>
 
 <details>
-<summary><b>App Store Connect — 11 araç</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 16 araç</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -350,6 +350,11 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 | `appstore__testflight_gruplari` | TestFlight beta gruplarını, her gruptaki test kullanıcı sayısını, genel davet linklerini ve kotalarını gösterir. |
 | `appstore__metin_guncelle` ✎ | Hazırlanmakta olan sürümün mağaza metinlerini günceller: sürüm notları, açıklama, anahtar kelimeler, tanıtım metni. |
 | `appstore__satis_raporu` | Satış/indirme raporunu TSV olarak indirir: günlük, haftalık, aylık veya yıllık; satış, ön sipariş, yükleme, abonelik, abonelik olayı, abone ve teklif kodu raporları. |
+| `appstore__abonelik_fiyat_ayarla` ✎ | Aboneliğin fiyatını **bütün ülkelerde tek seferde** ayarlar: bir fiyat verirsin (örn. USA 9.99), Apple'ın eşitleme tablosu ~175 ülkenin karşılığını çıkarır, hepsi tek istekte yazılır. |
+| `appstore__iap_fiyat_ayarla` ✎ | Tek seferlik satın almanın fiyatını tek bir taban ülkeden ayarlar; gerisini Apple doldurur. |
+| `appstore__abonelik_ulkeleri` ✎ | Aboneliği bütün ülkelerde (ya da verdiklerinde) tek istekte satışa açar. |
+| `appstore__abonelik_kur` ✎ | Sıfırdan abonelik kurar, tek onayla: grup → abonelik → dil metinleri → satış ülkeleri → bütün ülkelerde fiyat. |
+| `appstore__yas_derecelendirme` ✎ | Yaş derecelendirme anketini okur veya doldurur (Apple'ın 2025 soruları). Düzenlenebilir appInfo'yu kendisi bulur; yalnızca verdiğin cevaplar değişir. |
 
 </details>
 
@@ -415,7 +420,7 @@ hiçbirini kullanmasan bile her mesajda yeniden ödenir.
 
 | | Araç | Her mesajda ödenen |
 | --- | --- | --- |
-| **magaza-mcp** | 27 | **~4.000 token** |
+| **magaza-mcp** | 32 | **~6.000 token** |
 | Hepsi ayrı araç olsaydı | 1440 | ~210.000 token |
 
 > [!NOTE]
@@ -467,7 +472,7 @@ analitik raporlar daha yüksek yetki ister.
   onayladıktan sonra `onayla=true` ile tekrarlandığında yürür. Bu **sunucu
   tarafında** uygulanır — istemcinin onay arayüzüne bağlı değildir.
 - **Salt-okunur mod.** `--salt-okunur` (veya `SALT_OKUNUR=1`) yazma yapan
-  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 27 araç
+  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 32 araç
   24'e düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
   kapısıdır — ama yazma operasyonu istendiğinde reddeder.
 - **Yol parametreleri doğrulanır.** Araçlara verilen kimlikler URL'e girmeden

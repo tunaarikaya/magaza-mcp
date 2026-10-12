@@ -96,6 +96,64 @@ export type AramaSonucu = Operasyon & {
 };
 
 /**
+ * Türkçe kelime → API terimi. Model kullanıcının cümlesini olduğu gibi
+ * aradığında ("abonelik fiyat", "yaş derecelendirme") sıfır sonuç dönüyordu.
+ * Önek eşleşmesi yapılır: "abonelikler", "fiyatları" da tutar.
+ */
+const TURKCE: [string, string][] = [
+  ["derecelendirme", "rating"],
+  ["abonelik", "subscription"],
+  ["açıklama", "description"],
+  ["kullanıcı", "user"],
+  ["sertifika", "certificate"],
+  ["kategori", "category"],
+  ["uygulama", "app"],
+  ["görüntü", "screenshot"],
+  ["gizlilik", "privacy"],
+  ["tanıtım", "promotional"],
+  ["deneme", "introductory"],
+  ["teklif", "offer"],
+  ["indirim", "offer"],
+  ["sürüm", "version"],
+  ["yorum", "review"],
+  ["yanıt", "response"],
+  ["fiyat", "price"],
+  ["ülke", "territor"],
+  ["satış", "sales"],
+  ["satın", "purchase"],
+  ["rapor", "report"],
+  ["ürün", "product"],
+  ["cihaz", "device"],
+  ["çökme", "crash"],
+  ["iade", "refund"],
+  ["grup", "group"],
+  ["yaş", "age"],
+];
+
+/**
+ * Kelimeyi tekil köküne indirir; arama alt dize eşleşmesi olduğu için
+ * "availability" ile "subscriptionPlanAvailabilities" böylece buluşur.
+ */
+function tekil(kelime: string): string {
+  if (kelime.length <= 4) return kelime;
+  return kelime.replace(/(ies|y|s)$/, "");
+}
+
+function kelimeAyir(sorgu: string): string[] {
+  return sorgu
+    // "İ".toLowerCase() noktalı birleşik karakter üretir; düz i'ye indir.
+    .toLowerCase()
+    .replace(/i̇/g, "i")
+    .split(/\s+/)
+    .filter(Boolean)
+    .flatMap((k) => {
+      const tr = TURKCE.find(([on]) => k.startsWith(on));
+      return tr ? tr[1] : k;
+    })
+    .map(tekil);
+}
+
+/**
  * Katalogda arama yapar.
  *
  * Basit ama işe yarayan bir puanlama: sorgudaki her kelime için operasyon
@@ -110,11 +168,7 @@ export function ara(
   sorgu: string,
   secenek: { magaza?: "appstore" | "play"; limit?: number } = {},
 ): AramaSonucu[] {
-  const kelimeler = sorgu
-    .toLowerCase()
-    .split(/\s+/)
-    .map((k) => k.trim())
-    .filter(Boolean);
+  const kelimeler = kelimeAyir(sorgu);
 
   if (kelimeler.length === 0) return [];
 

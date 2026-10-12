@@ -1,8 +1,8 @@
 /**
  * Araç listesi testleri.
  *
- * Buradaki sayılar README'de ve AGENTS.md'de yazılı: "iki mağazada 27, tek
- * mağazada 14/13, salt-okunurda 24". Bir araç eklenip dokümanı güncellenmezse
+ * Buradaki sayılar README'de ve AGENTS.md'de yazılı: "iki mağazada 32, tek
+ * mağazada 19/13, salt-okunurda 24". Bir araç eklenip dokümanı güncellenmezse
  * bu testler uyarır.
  *
  * Asıl önemlisi kapsam: seçilmeyen mağazanın araçlarının hiç yüklenmemesi ve
@@ -39,17 +39,17 @@ afterEach(() => {
 const adlar = (araclar: { ad: string }[]) => araclar.map((a) => a.ad);
 
 describe("araclariTopla", () => {
-  it("iki mağaza açıkken 27 araç yükler", () => {
-    assert.equal(ortamda("appstore,play").length, 27);
+  it("iki mağaza açıkken 32 araç yükler", () => {
+    assert.equal(ortamda("appstore,play").length, 32);
   });
 
   it("MAGAZALAR verilmezse iki mağaza da açıktır", () => {
-    assert.equal(ortamda(undefined).length, 27);
+    assert.equal(ortamda(undefined).length, 32);
   });
 
-  it("yalnızca App Store'da 14 araç yükler, hiç play__ aracı olmaz", () => {
+  it("yalnızca App Store'da 19 araç yükler, hiç play__ aracı olmaz", () => {
     const araclar = ortamda("appstore");
-    assert.equal(araclar.length, 14);
+    assert.equal(araclar.length, 19);
     assert.equal(adlar(araclar).filter((a) => a.startsWith("play__")).length, 0);
   });
 
@@ -73,7 +73,13 @@ describe("araclariTopla", () => {
     const araclar = ortamda("appstore,play", true);
     assert.equal(araclar.length, 24);
 
-    for (const ad of ["appstore__yorum_yanitla", "appstore__metin_guncelle", "play__yorum_yanitla"]) {
+    for (const ad of [
+      "appstore__yorum_yanitla",
+      "appstore__metin_guncelle",
+      "appstore__abonelik_fiyat_ayarla",
+      "appstore__yas_derecelendirme",
+      "play__yorum_yanitla",
+    ]) {
       assert.ok(!adlar(araclar).includes(ad), `${ad} salt-okunur modda yüklenmemeli`);
     }
     // Katalogdaki okuma uçlarının tek kapısı olduğu için o listede kalır.

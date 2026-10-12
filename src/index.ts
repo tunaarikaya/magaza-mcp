@@ -15,6 +15,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 
 import { appstoreAraclari } from "./araclar/appstore.js";
+import { appstoreYazmaAraclari } from "./araclar/appstore-yazma.js";
 import { dispatchAraclari } from "./araclar/dispatch.js";
 import { ortakAraclar } from "./araclar/ortak.js";
 import { playAraclari } from "./araclar/play.js";
@@ -47,7 +48,7 @@ export function araclariTopla(): Arac[] {
   const acik = acikMagazalar();
   const hepsi: Arac[] = [];
 
-  if (acik.appstore) hepsi.push(...appstoreAraclari());
+  if (acik.appstore) hepsi.push(...appstoreAraclari(), ...appstoreYazmaAraclari());
   if (acik.play) hepsi.push(...playAraclari());
   hepsi.push(...ortakAraclar());
   hepsi.push(...dispatchAraclari());

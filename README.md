@@ -62,8 +62,8 @@ directly to Apple and Google, and your keys never leave your Keychain.
 | [🧑‍💻 Manual setup](#-manual-setup) | If you're not using an assistant |
 | [🧩 Do the two stores mix up?](#-do-the-two-stores-mix-up) | No — here's why |
 | [💬 What you can ask](#-what-you-can-ask) | Example prompts |
-| [🧰 Tools](#-tools) | Full list of all 27 tools |
-| [🌐 Full API access](#-full-api-access) | 1,440 operations, ~4,000 tokens |
+| [🧰 Tools](#-tools) | Full list of all 32 tools |
+| [🌐 Full API access](#-full-api-access) | 1,440 operations, ~6,000 tokens |
 | [🔑 Required permissions](#-required-permissions) | What Apple and Google require |
 | [🔒 Security](#-security) | Keys, approval gates, telemetry |
 | [🩺 Troubleshooting](#-troubleshooting) | Common errors |
@@ -274,8 +274,8 @@ model, and cost zero tokens.
 
 | Setup | Tools loaded |
 | --- | --- |
-| Both stores | 27 |
-| App Store only | 14 |
+| Both stores | 32 |
+| App Store only | 19 |
 | Play only | 13 |
 | Read-only (both stores) | 24 |
 
@@ -336,7 +336,7 @@ These tools only load when both stores are connected.
 </details>
 
 <details>
-<summary><b>App Store Connect — 11 tools</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 16 tools</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -353,6 +353,11 @@ These tools only load when both stores are connected.
 | `appstore__testflight_gruplari` | Shows TestFlight beta groups, how many testers are in each, public invite links, and quotas. |
 | `appstore__metin_guncelle` ✎ | Updates the store text of the version in preparation: release notes, description, keywords, promotional text. |
 | `appstore__satis_raporu` | Downloads the sales/download report as TSV: daily, weekly, monthly, or yearly; sales, pre-order, installs, subscriptions, subscription events, subscribers, and offer code reports. |
+| `appstore__abonelik_fiyat_ayarla` ✎ | Sets a subscription's price in **every country at once**: give one price (e.g. USA 9.99), Apple's equalization table fills in all ~175 countries and they're written in a single request. |
+| `appstore__iap_fiyat_ayarla` ✎ | Sets a one-time purchase's price from a single base country; Apple fills in the rest. |
+| `appstore__abonelik_ulkeleri` ✎ | Makes a subscription available in every country (or the ones you list) in one request. |
+| `appstore__abonelik_kur` ✎ | Creates a subscription from scratch behind one approval: group → subscription → localized names → availability → prices in all countries. |
+| `appstore__yas_derecelendirme` ✎ | Reads or fills in the age rating questionnaire (Apple's 2025 questions). Finds the editable app info by itself; only the answers you give change. |
 
 </details>
 
@@ -420,7 +425,7 @@ any of them.
 
 | | Tools | Paid on every message |
 | --- | --- | --- |
-| **magaza-mcp** | 27 | **~4,000 tokens** |
+| **magaza-mcp** | 32 | **~6,000 tokens** |
 | If all were separate tools | 1,440 | ~210,000 tokens |
 
 > [!NOTE]
@@ -477,7 +482,7 @@ some analytics reports need higher privileges.
   the client's approval UI.
 - **Read-only mode.** `--salt-okunur` (or `SALT_OKUNUR=1`) removes every
   write-capable tool from the list entirely: the model can't see them or call
-  them. 27 tools become 24. `magaza__cagir` stays in the list because it's
+  them. 32 tools become 24. `magaza__cagir` stays in the list because it's
   also the single gateway for read endpoints in the catalog — but it refuses
   write operations when read-only mode is on.
 - **Path parameters are validated.** IDs passed to tools are encoded before

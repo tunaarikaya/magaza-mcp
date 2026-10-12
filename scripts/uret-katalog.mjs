@@ -49,6 +49,8 @@ const APPLE_TAKMA_ADLARI = [
   [/^Builds$|^BuildBundles$|^BuildBeta/, "testflight"],
   [/InAppPurchase|Subscription/, "iap in app purchase monetization"],
   [/CustomerReview/, "rating reply respond feedback"],
+  [/AgeRating/, "age rating questionnaire content rating"],
+  [/^AppInfo/, "app info category age rating"],
   [/SalesReport|FinanceReport/, "revenue earnings payout income sales"],
   [/AnalyticsReport/, "analytics metrics statistics"],
   [/Territor|Availabilit/, "country region market"],

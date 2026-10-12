@@ -9,8 +9,8 @@
 import { cagir, raporIndir, tumunuGetir } from "../istemci/apple.js";
 import type { Arac } from "./tip.js";
 
-const metin = (aciklama: string) => ({ type: "string", description: aciklama });
-const sayi = (aciklama: string) => ({ type: "number", description: aciklama });
+export const metin = (aciklama: string) => ({ type: "string", description: aciklama });
+export const sayi = (aciklama: string) => ({ type: "number", description: aciklama });
 
 /** Apple tek sayfada en çok 200 kayıt verir; daha fazlası 400 ile döner. */
 const SAYFA_SINIRI = 200;
@@ -30,7 +30,7 @@ function adet(ham: unknown, varsayilan: number, ust = 1000): number {
  * keser. Kimlikler harf/rakam/tire dünyasından geldiği için kodlamanın
  * meşru bir kullanımı bozması söz konusu değil.
  */
-function kimlik(deger: unknown, alan: string): string {
+export function kimlik(deger: unknown, alan: string): string {
   const ham = String(deger ?? "").trim();
   if (!ham) throw new Error(`${alan} boş olamaz.`);
   if (ham === "." || ham === ".." || ham.includes("/") || ham.includes("\\")) {
@@ -42,7 +42,7 @@ function kimlik(deger: unknown, alan: string): string {
   return ham;
 }
 
-function parca(deger: unknown, alan: string): string {
+export function parca(deger: unknown, alan: string): string {
   return encodeURIComponent(kimlik(deger, alan));
 }
 
@@ -54,7 +54,7 @@ function parca(deger: unknown, alan: string): string {
  * türüyor; onay olmadan yazmak, yoruma gömülü bir talimatın mağaza metnini
  * değiştirmesine ya da senin adına halka açık yanıt yayımlamasına yeter.
  */
-function onayIste(
+export function onayIste(
   islem: string,
   ozet: string,
   yapilacak: Record<string, unknown>,
@@ -70,7 +70,7 @@ function onayIste(
   };
 }
 
-const onaySemasi = {
+export const onaySemasi = {
   type: "boolean",
   description:
     "Veri değiştiren işlemler için true olmalı. Kullanıcı işlemi açıkça " +
@@ -78,7 +78,7 @@ const onaySemasi = {
 };
 
 /** Ülke kodları spesifikasyonda büyük harf (TUR, USA); küçük harf reddedilir. */
-function ulkeKodu(ham: unknown): string | undefined {
+export function ulkeKodu(ham: unknown): string | undefined {
   const s = String(ham ?? "").trim().toUpperCase();
   return s ? s : undefined;
 }

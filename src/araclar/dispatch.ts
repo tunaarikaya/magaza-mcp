@@ -165,6 +165,29 @@ function yazmaIslemiMi(op: Operasyon): boolean {
   return true;
 }
 
+/**
+ * Apple gövdesinde modelin en sık unuttuğu iki alanı doldurur.
+ *
+ * JSON:API'de `data.type` her uç için tek bir sabit, PATCH'te `data.id` de
+ * yoldaki kimliğin aynısı. İkisi eksik gelince Apple anlamsız bir 409
+ * dönüyor; model ancak bir tur daha harcayıp düzeltiyordu. Verilmiş değere
+ * dokunulmaz.
+ */
+function govdeTamamla(op: Operasyon, girdi: Record<string, any>): void {
+  const veri = girdi.govde?.data;
+  if (!veri || typeof veri !== "object" || Array.isArray(veri)) return;
+
+  if (veri.type === undefined) {
+    const sema = govdeSemasi("appstore", op) as any;
+    const tur = sema?.properties?.data?.properties?.type?.enum;
+    if (Array.isArray(tur) && tur.length === 1) veri.type = tur[0];
+  }
+  const yolId = girdi.parametreler?.id;
+  if (veri.id === undefined && op.yontem === "PATCH" && yolId !== undefined) {
+    veri.id = String(yolId);
+  }
+}
+
 export function dispatchAraclari(): Arac[] {
   const acik = acikMagazalar();
   const magazaListesi = [
@@ -190,15 +213,18 @@ export function dispatchAraclari(): Arac[] {
       "Hazır araçlar arasında işini görecek bir şey yoksa önce bunu kullan: " +
       "aradığın işlemin gerçek operasyon adını, parametrelerini ve HTTP " +
       "yöntemini döndürür. Sonucu magaza__cagir ile çalıştırabilirsin. " +
-      "Örnek sorgular: 'abonelik fiyat', 'testflight tester', 'crash rate'.",
+      "Örnek sorgular: 'subscription price', 'testflight tester', 'crash rate'. " +
+      "Abonelik/IAP fiyatı, abonelik kurulumu ve yaş derecelendirmesi için " +
+      "hazır appstore__ araçları var; onları tercih et.",
     girdiSemasi: {
       type: "object",
       properties: {
         sorgu: {
           type: "string",
           description:
-            "Aranacak kelimeler. Türkçe değil, API terimleriyle ara " +
-            "(örn. 'subscription price', 'review', 'build').",
+            "Aranacak kelimeler. En iyi sonucu API terimleri verir " +
+            "(örn. 'subscription price', 'review', 'build'); sık Türkçe " +
+            "kelimeler de karşılığına çevrilir.",
         },
         magaza: {
           type: "string",
@@ -316,6 +342,7 @@ export function dispatchAraclari(): Arac[] {
       }
 
       const yazma = yazmaIslemiMi(op);
+      if (yazma && magaza === "appstore") govdeTamamla(op, girdi);
 
       if (yazma && saltOkunur()) {
         throw new Error(

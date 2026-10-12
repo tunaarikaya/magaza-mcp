@@ -53,11 +53,20 @@ export async function cagir({ yontem, yol, sorgu, govde }: Istek): Promise<unkno
   // gövdesiz POST/DELETE'te bundan rahatsız oluyor.
   if (govde !== undefined) basliklar["content-type"] = "application/json";
 
-  const yanit = await fetch(adres, {
-    method: yontem,
-    headers: basliklar,
-    body: govde === undefined ? undefined : JSON.stringify(govde),
-  });
+  // 429'da Apple isteği hiç işlememiştir; yazmayı bile tekrarlamak güvenli.
+  // Ülke ülke fiyat yazan yedek yol (bkz. appstore-yazma.ts) dakikada ~50
+  // yazma sınırına takılıyor; tekrar denemeden yarıda kalıyordu.
+  let yanit: Response;
+  for (let deneme = 0; ; deneme++) {
+    yanit = await fetch(adres, {
+      method: yontem,
+      headers: basliklar,
+      body: govde === undefined ? undefined : JSON.stringify(govde),
+    });
+    if (yanit.status !== 429 || deneme >= 3) break;
+    const bekle = Number(yanit.headers.get("retry-after")) || 2 ** deneme * 2;
+    await new Promise((r) => setTimeout(r, Math.min(bekle, 60) * 1000));
+  }
 
   // 204 ve gövdesiz yanıtlar
   const metin = await yanit.text();
@@ -82,12 +91,13 @@ export async function tumunuGetir(
   yol: string,
   sorgu: Record<string, unknown>,
   istenen: number,
+  /** Çoğu uçta 200; fiyat noktası uçları spec'e göre 8000'e kadar izin verir. */
+  sayfaUst = 200,
 ): Promise<{ data: any[]; included: any[] }> {
   const data: any[] = [];
   const included: any[] = [];
 
-  // Apple'ın tek sayfa üst sınırı 200.
-  const sayfaBoyu = Math.min(200, Math.max(1, istenen));
+  const sayfaBoyu = Math.min(sayfaUst, Math.max(1, istenen));
   let yanit: any = await cagir({ yontem: "GET", yol, sorgu: { ...sorgu, limit: sayfaBoyu } });
 
   for (let sayfa = 0; sayfa < 50; sayfa++) {
