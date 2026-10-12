@@ -6,6 +6,9 @@
  * 175 ülke × (önizleme + onay) ≈ 350 araç çağrısı. Buradaki araçlar döngüyü
  * sunucuda koşturur; model yalnızca bir önizleme ve bir onay görür.
  *
+ * appstore__fiyat_analizi da burada: yazmaz, ama ülkeye özel fiyat önerisini
+ * abonelik_fiyat_ayarla'nın doğrudan kabul ettiği biçimde üretir.
+ *
  * Yollar ve gövdeler Apple OpenAPI 4.5'e karşı doğrulandı; standart
  * aboneliğin planType'ı canlı hesapta UPFRONT okundu.
  */
@@ -380,6 +383,136 @@ async function beyanOku(appInfoId: string): Promise<any> {
 }
 
 /* ------------------------------------------------------------------ */
+/* Ülkeye özel fiyat                                                   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Birden çok ülkenin fiyat basamaklarını getirir.
+ *
+ * `filter[territory]` liste kabul ediyor; ülke başına ~800-850 basamak var,
+ * 9 ülke tek 8000'lik sayfaya sığıyor. 120 ülke = 14 istek, altışar paralel.
+ */
+async function ulkeNoktalari(aboneId: string, ulkeler: string[]): Promise<Map<string, Satir[]>> {
+  const gruplar: string[][] = [];
+  for (let i = 0; i < ulkeler.length; i += 9) gruplar.push(ulkeler.slice(i, i + 9));
+
+  const sonuc = new Map<string, Satir[]>();
+  for (let i = 0; i < gruplar.length; i += 6) {
+    const sayfalar = await Promise.all(
+      gruplar.slice(i, i + 6).map((grup) =>
+        tumunuGetir(
+          `/v1/subscriptions/${parca(aboneId, "abonelik_id")}/pricePoints`,
+          {
+            "filter[territory]": grup.join(","),
+            include: "territory",
+            "fields[subscriptionPricePoints]": "customerPrice,proceeds,territory",
+            "fields[territories]": "currency",
+          },
+          FIYAT_SAYFASI * 2,
+          FIYAT_SAYFASI,
+        ),
+      ),
+    );
+    for (const { data, included } of sayfalar) {
+      const paralar = new Map<string, string>();
+      for (const t of included) if (t?.type === "territories") paralar.set(t.id, t.attributes?.currency);
+      for (const n of data) {
+        const u = n.relationships?.territory?.data?.id;
+        if (!u) continue;
+        if (!sonuc.has(u)) sonuc.set(u, []);
+        sonuc.get(u)!.push({
+          ulke: u,
+          nokta: n.id,
+          fiyat: n.attributes?.customerPrice,
+          gelir: n.attributes?.proceeds,
+          para: paralar.get(u),
+        });
+      }
+    }
+  }
+  return sonuc;
+}
+
+function enYakin(noktalar: Satir[], hedef: number): Satir {
+  return noktalar.reduce((a, b) =>
+    Math.abs(Number(b.fiyat) - hedef) < Math.abs(Number(a.fiyat) - hedef) ? b : a,
+  );
+}
+
+/**
+ * Ülkeye özel fiyatları geçerli basamaklara oturtur.
+ *
+ * Apple keyfi fiyat kabul etmiyor ("150 TL" yok, 149.99 var); en yakın
+ * basamak seçilir ve önizlemede istenenle birlikte gösterilir.
+ */
+async function ozelSatirlar(aboneId: string, ham: unknown): Promise<{ satirlar: Satir[]; notlar: string[] }> {
+  if (!ham || typeof ham !== "object" || Array.isArray(ham)) {
+    throw new Error("ozel_fiyatlar bir nesne olmalı, örn. {\"TUR\": \"349.99\", \"IND\": \"499\"}.");
+  }
+  const istenen = new Map<string, number>();
+  for (const [u, f] of Object.entries(ham)) istenen.set(ulkeKodu(u)!, fiyatSayisi(f, `${u} fiyatı`));
+
+  const noktalar = await ulkeNoktalari(aboneId, [...istenen.keys()]);
+  const satirlar: Satir[] = [];
+  const notlar: string[] = [];
+  for (const [u, f] of istenen) {
+    const liste = noktalar.get(u);
+    if (!liste?.length) throw new Error(`${u} için fiyat basamağı bulunamadı; ülke kodu doğru mu (3 harf, örn. TUR)?`);
+    const s = enYakin(liste, f);
+    satirlar.push(s);
+    notlar.push(`${u}: ${s.fiyat} ${s.para ?? ""}`.trim() + (Number(s.fiyat) !== f ? ` (istenen ${f}, en yakın basamak)` : ""));
+  }
+  return { satirlar, notlar };
+}
+
+type Gosterge = Map<string, { deger: number; yil: string }>;
+let _alimGucu: Promise<{ ppp: Gosterge; kur: Gosterge }> | undefined;
+
+/**
+ * Dünya Bankası'ndan ülkelerin fiyat seviyesi verisini çeker.
+ *
+ * Hane tüketimi PPP çevrim katsayısı / resmi kur: ABD = 1, Türkiye ≈ 0.45,
+ * Hindistan ≈ 0.23. Anahtarsız, herkese açık veri; bizden hiçbir şey gitmez.
+ */
+function alimGucuVerisi(): Promise<{ ppp: Gosterge; kur: Gosterge }> {
+  const getir = async (gosterge: string): Promise<Gosterge> => {
+    const yanit = await fetch(
+      `https://api.worldbank.org/v2/country/all/indicator/${gosterge}?format=json&mrnev=1&per_page=500`,
+      { signal: AbortSignal.timeout(10_000) },
+    );
+    const [, veri] = (await yanit.json()) as [unknown, any[]];
+    if (!Array.isArray(veri)) throw new Error(`Dünya Bankası ${gosterge} verisi gelmedi.`);
+    return new Map(
+      veri
+        .filter((x) => x?.value != null && x?.countryiso3code)
+        .map((x) => [x.countryiso3code as string, { deger: Number(x.value), yil: String(x.date) }]),
+    );
+  };
+  _alimGucu ??= Promise.all([getir("PA.NUS.PRVT.PP"), getir("PA.NUS.FCRF")])
+    .then(([ppp, kur]) => ({ ppp, kur }))
+    .catch((hata) => {
+      _alimGucu = undefined;
+      throw new Error(`Alım gücü verisi alınamadı (api.worldbank.org): ${(hata as Error).message}`);
+    });
+  return _alimGucu;
+}
+
+/**
+ * Bir ülkenin fiyat seviyesi (ABD = 1).
+ *
+ * Apple avroyla satıyorsa avro kuru kullanılır: avroya yeni geçen ülkelerde
+ * (Bulgaristan 2026) PPP avroya çevrilmiş ama kur serisi eski parada kalmış,
+ * oran yarıya düşüyordu. İki seri farklı yıldansa (Arjantin'de PPP 2021, kur
+ * 2025) oran anlamsız; o ülke atlanır.
+ */
+function fiyatSeviyesi(v: { ppp: Gosterge; kur: Gosterge }, ulke: string, para?: string) {
+  const p = v.ppp.get(ulke);
+  const k = para === "EUR" ? v.kur.get("DEU") : v.kur.get(ulke);
+  if (!p || !k || k.yil !== p.yil || !(k.deger > 0)) return undefined;
+  return p.deger / k.deger;
+}
+
+/* ------------------------------------------------------------------ */
 /* Araçlar                                                             */
 /* ------------------------------------------------------------------ */
 
@@ -397,17 +530,27 @@ export function appstoreYazmaAraclari(): Arac[] {
     {
       ad: "appstore__abonelik_fiyat_ayarla",
       aciklama:
-        "Bir aboneliğin fiyatını TÜM ülkelerde tek seferde ayarlar. Tek bir ülkedeki " +
-        "fiyatı verirsin (varsayılan USA), Apple'ın eşitleme tablosu ~175 ülkenin " +
-        "karşılığını çıkarır ve hepsi tek istekte yazılır. Ülke ülke magaza__cagir ile " +
-        "subscriptionPrices yazma; bu araç onun yerine geçer. Önizlemede ülke sayısı ve " +
-        "örnek fiyatlar döner.",
+        "Bir aboneliğin fiyatını ayarlar; döngü sunucuda, tek onayla. Ülke ülke " +
+        "magaza__cagir ile subscriptionPrices yazma, bu araç onun yerine geçer.\n" +
+        "- fiyat: bir ülkedeki fiyat (varsayılan USA); Apple'ın eşitleme tablosu " +
+        "~175 ülkenin karşılığını çıkarır, hepsi yazılır.\n" +
+        "- ozel_fiyatlar: {\"TUR\": \"349.99\"} gibi ülkeye özel fiyatlar. fiyat ile " +
+        "birlikte verilirse eşitlemenin üstüne yazılır; tek başına verilirse yalnızca " +
+        "o ülkeler değişir, diğerlerine dokunulmaz.\n" +
+        "Fiyat en yakın geçerli Apple basamağına oturtulur ve önizlemede gösterilir.",
       girdiSemasi: {
         type: "object",
         properties: {
           abonelik_id: metin("appstore__abonelikler'den gelen abonelik id'si."),
           fiyat: fiyatSemasi,
           ulke: ulkeSemasi,
+          ozel_fiyatlar: {
+            type: "object",
+            description:
+              "Ülke kodu → o ülkenin para biriminde fiyat, örn. {\"TUR\": \"349.99\", " +
+              "\"IND\": \"499\"}. appstore__fiyat_analizi'nin ozel_fiyatlar çıktısı olduğu gibi verilebilir.",
+            additionalProperties: { type: "string" },
+          },
           mevcut_aboneleri_koru: {
             type: "boolean",
             description:
@@ -417,29 +560,135 @@ export function appstoreYazmaAraclari(): Arac[] {
           baslangic: baslangicSemasi,
           onayla: onaySemasi,
         },
-        required: ["abonelik_id", "fiyat"],
+        required: ["abonelik_id"],
       },
       yazma: true,
       async calistir(girdi) {
-        const fiyat = fiyatSayisi(girdi.fiyat);
+        const tabanVar = girdi.fiyat !== undefined && girdi.fiyat !== "";
+        if (!tabanVar && girdi.ozel_fiyatlar === undefined) {
+          throw new Error("fiyat ya da ozel_fiyatlar vermelisin.");
+        }
+        const fiyat = tabanVar ? fiyatSayisi(girdi.fiyat) : undefined;
         const ulke = ulkeKodu(girdi.ulke) ?? "USA";
         const koru = girdi.mevcut_aboneleri_koru !== false;
         const baslangic = tarih(girdi.baslangic);
-        const matris = await abonelikMatrisi(girdi.abonelik_id, fiyat, ulke);
+
+        const [esit, ozel] = await Promise.all([
+          fiyat !== undefined ? abonelikMatrisi(girdi.abonelik_id, fiyat, ulke) : [],
+          girdi.ozel_fiyatlar !== undefined
+            ? ozelSatirlar(girdi.abonelik_id, girdi.ozel_fiyatlar)
+            : { satirlar: [], notlar: [] },
+        ]);
+        const ozelUlkeler = new Set(ozel.satirlar.map((s) => s.ulke));
+        const matris = [...esit.filter((s) => !ozelUlkeler.has(s.ulke)), ...ozel.satirlar];
 
         if (girdi.onayla !== true) {
           return onayIste(
             `PATCH /v1/subscriptions/${girdi.abonelik_id} (${matris.length} ülke)`,
-            `Aboneliğin fiyatını ${ulke} ${fiyat} baz alınarak ${matris.length} ülkede ayarlar.`,
+            fiyat !== undefined
+              ? `Aboneliğin fiyatını ${ulke} ${fiyat} baz alınarak ${matris.length} ülkede ayarlar` +
+                  (ozel.satirlar.length ? `; ${ozel.satirlar.length} ülkede özel fiyat.` : ".")
+              : `Yalnızca ${matris.length} ülkenin fiyatını değiştirir; diğer ülkelere dokunmaz.`,
             {
               ulke_sayisi: matris.length,
-              ornek_fiyatlar: ornekler(matris),
+              ornek_fiyatlar: fiyat !== undefined ? ornekler(esit) : undefined,
+              ozel_fiyatlar: ozel.notlar.length ? ozel.notlar : undefined,
               mevcut_aboneleri_koru: koru,
               baslangic: baslangic ?? "hemen",
             },
           );
         }
         return abonelikFiyatYaz(girdi.abonelik_id, matris, koru, baslangic);
+      },
+    },
+
+    {
+      ad: "appstore__fiyat_analizi",
+      aciklama:
+        "Ülkelere özel fiyat önerir (bölgesel fiyatlandırma); hiçbir şey yazmaz. Bir " +
+        "taban fiyattan (örn. USA 9.99) Apple'ın eşitlediği yerel fiyatı alır, ülkenin " +
+        "alım gücüne (Dünya Bankası fiyat seviyesi) göre yumuşatılmış bir indirim " +
+        "hesaplar ve en yakın geçerli Apple basamağına oturtur. Fiyatı öldürmemek için " +
+        "indirim sınırlı: zengin ülkelere dokunulmaz, hiçbir ülke eşit fiyatın " +
+        "en_dusuk_oran'ının altına inmez, hiçbir fiyat artırılmaz. Öneriyi kullanıcıya " +
+        "göster, isterse ülke ülke düzelt, sonra appstore__abonelik_fiyat_ayarla'ya " +
+        "fiyat + ozel_fiyatlar olarak ver.",
+      girdiSemasi: {
+        type: "object",
+        properties: {
+          abonelik_id: metin("appstore__abonelikler'den gelen abonelik id'si."),
+          fiyat: fiyatSemasi,
+          ulke: ulkeSemasi,
+          yansitma: {
+            type: "number",
+            description:
+              "Alım gücü farkının ne kadarı fiyata yansısın, 0-1 (varsayılan 0.4). " +
+              "0 = indirim yok, 1 = farkın tamamı (agresif). 0.4'te Türkiye ~%27, Hindistan ~%44 iner.",
+          },
+          en_dusuk_oran: {
+            type: "number",
+            description: "Hiçbir ülke eşit fiyatın bu oranının altına inmesin (varsayılan 0.5 = en fazla %50 indirim).",
+          },
+        },
+        required: ["abonelik_id", "fiyat"],
+      },
+      async calistir(girdi) {
+        const fiyat = fiyatSayisi(girdi.fiyat);
+        const ulke = ulkeKodu(girdi.ulke) ?? "USA";
+        const yansitma = Math.min(1, Math.max(0, Number(girdi.yansitma ?? 0.4) || 0));
+        const taban = Math.min(1, Math.max(0.1, Number(girdi.en_dusuk_oran ?? 0.5) || 0.5));
+
+        const [matris, veri] = await Promise.all([
+          abonelikMatrisi(girdi.abonelik_id, fiyat, ulke),
+          alimGucuVerisi(),
+        ]);
+        const cipaOrani = fiyatSeviyesi(veri, ulke, matris[0]?.para) ?? 1;
+
+        // %15'ten küçük indirim gürültü: İtalya'yı %12 indirmek geliri düşürür, satışı
+        // pek artırmaz. Batı Avrupa ve Japonya eşit fiyatta kalır.
+        const adaylar = matris
+          .map((s) => {
+            const o = fiyatSeviyesi(veri, s.ulke, s.para);
+            if (!o || s.ulke === ulke) return undefined;
+            const goreli = o / cipaOrani;
+            const carpan = Math.min(1, Math.max(taban, goreli ** yansitma));
+            return carpan <= 0.85 ? { s, goreli, carpan } : undefined;
+          })
+          .filter((x) => x !== undefined);
+
+        const noktalar = await ulkeNoktalari(girdi.abonelik_id, adaylar.map((a) => a.s.ulke));
+        const oneriler: { ulke: string; satir: string; fiyat: string; indirim: number }[] = [];
+        for (const { s, goreli, carpan } of adaylar) {
+          const liste = noktalar.get(s.ulke);
+          if (!liste?.length) continue;
+          const yeni = enYakin(liste, Number(s.fiyat) * carpan);
+          const indirim = Math.round((1 - Number(yeni.fiyat) / Number(s.fiyat)) * 100);
+          if (indirim < 10) continue;
+          oneriler.push({
+            ulke: s.ulke,
+            fiyat: yeni.fiyat,
+            indirim,
+            satir:
+              `${s.ulke}: ${s.fiyat} → ${yeni.fiyat} ${s.para ?? ""} ` +
+              `(-%${indirim}, alım gücü ${goreli.toFixed(2)})`,
+          });
+        }
+        oneriler.sort((a, b) => b.indirim - a.indirim);
+
+        return {
+          taban: `${ulke} ${fiyat}`,
+          esit_kalan_ulke: matris.length - oneriler.length,
+          indirimli_ulke: oneriler.length,
+          oneriler: oneriler.map((o) => o.satir),
+          ozel_fiyatlar: Object.fromEntries(oneriler.map((o) => [o.ulke, o.fiyat])),
+          ayarlar: { yansitma, en_dusuk_oran: taban },
+          kaynak:
+            "Alım gücü: Dünya Bankası, hane tüketimi PPP / resmi kur (en güncel yıl). " +
+            "Verisi olmayan ülkeler (ör. Tayvan) eşit fiyatta kalır.",
+          not:
+            "Hiçbir şey yazılmadı. Kullanıcıya önerileri göster; onaylarsa " +
+            "appstore__abonelik_fiyat_ayarla'ya fiyat ve bu ozel_fiyatlar ile çağır.",
+        };
       },
     },
 

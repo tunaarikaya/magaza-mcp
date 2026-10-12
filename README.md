@@ -62,7 +62,7 @@ directly to Apple and Google, and your keys never leave your Keychain.
 | [🧑‍💻 Manual setup](#-manual-setup) | If you're not using an assistant |
 | [🧩 Do the two stores mix up?](#-do-the-two-stores-mix-up) | No — here's why |
 | [💬 What you can ask](#-what-you-can-ask) | Example prompts |
-| [🧰 Tools](#-tools) | Full list of all 32 tools |
+| [🧰 Tools](#-tools) | Full list of all 33 tools |
 | [🌐 Full API access](#-full-api-access) | 1,440 operations, ~6,000 tokens |
 | [🔑 Required permissions](#-required-permissions) | What Apple and Google require |
 | [🔒 Security](#-security) | Keys, approval gates, telemetry |
@@ -274,10 +274,10 @@ model, and cost zero tokens.
 
 | Setup | Tools loaded |
 | --- | --- |
-| Both stores | 32 |
-| App Store only | 19 |
+| Both stores | 33 |
+| App Store only | 20 |
 | Play only | 13 |
-| Read-only (both stores) | 24 |
+| Read-only (both stores) | 25 |
 
 **3. Cross-store tools only exist when both stores are enabled.** In a
 single-store setup they're never created at all — they'd have no meaning.
@@ -336,7 +336,7 @@ These tools only load when both stores are connected.
 </details>
 
 <details>
-<summary><b>App Store Connect — 16 tools</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 17 tools</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -353,7 +353,8 @@ These tools only load when both stores are connected.
 | `appstore__testflight_gruplari` | Shows TestFlight beta groups, how many testers are in each, public invite links, and quotas. |
 | `appstore__metin_guncelle` ✎ | Updates the store text of the version in preparation: release notes, description, keywords, promotional text. |
 | `appstore__satis_raporu` | Downloads the sales/download report as TSV: daily, weekly, monthly, or yearly; sales, pre-order, installs, subscriptions, subscription events, subscribers, and offer code reports. |
-| `appstore__abonelik_fiyat_ayarla` ✎ | Sets a subscription's price in **every country at once**: give one price (e.g. USA 9.99), Apple's equalization table fills in all ~175 countries and they're written in a single request. |
+| `appstore__abonelik_fiyat_ayarla` ✎ | Sets a subscription's price in **every country at once**: give one price (e.g. USA 9.99), Apple's equalization table fills in all ~175 countries and they're written in a single request. Add country-specific prices on top (`{"TUR": "349.99"}`), or change only those countries and leave the rest alone. |
+| `appstore__fiyat_analizi` | Regional pricing suggestion, writes nothing: starts from Apple's equalized price and applies a softened discount based on each country's purchasing power (World Bank). Never raises a price, never cuts more than half, leaves rich countries alone. The output plugs straight into `abonelik_fiyat_ayarla`. |
 | `appstore__iap_fiyat_ayarla` ✎ | Sets a one-time purchase's price from a single base country; Apple fills in the rest. |
 | `appstore__abonelik_ulkeleri` ✎ | Makes a subscription available in every country (or the ones you list) in one request. |
 | `appstore__abonelik_kur` ✎ | Creates a subscription from scratch behind one approval: group → subscription → localized names → availability → prices in all countries. |
@@ -425,7 +426,7 @@ any of them.
 
 | | Tools | Paid on every message |
 | --- | --- | --- |
-| **magaza-mcp** | 32 | **~6,000 tokens** |
+| **magaza-mcp** | 33 | **~6,000 tokens** |
 | If all were separate tools | 1,440 | ~210,000 tokens |
 
 > [!NOTE]
@@ -482,7 +483,7 @@ some analytics reports need higher privileges.
   the client's approval UI.
 - **Read-only mode.** `--salt-okunur` (or `SALT_OKUNUR=1`) removes every
   write-capable tool from the list entirely: the model can't see them or call
-  them. 32 tools become 24. `magaza__cagir` stays in the list because it's
+  them. 33 tools become 25. `magaza__cagir` stays in the list because it's
   also the single gateway for read endpoints in the catalog — but it refuses
   write operations when read-only mode is on.
 - **Path parameters are validated.** IDs passed to tools are encoded before
@@ -500,8 +501,10 @@ some analytics reports need higher privileges.
 - **No telemetry.** No analytics, error reports, or usage data are sent.
   Network traffic only goes to `api.appstoreconnect.apple.com`,
   `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com`,
-  and `oauth2.googleapis.com` for tokens. There's no server in the middle;
-  data flows directly between your machine and Apple/Google.
+  and `oauth2.googleapis.com` for tokens. The one exception is
+  `appstore__fiyat_analizi`, which reads public purchasing-power figures from
+  `api.worldbank.org` (no key, nothing of yours is sent). There's no server in
+  the middle; data flows directly between your machine and Apple/Google.
 
 ---
 

@@ -62,7 +62,7 @@ Google ile konuşur, anahtarın Anahtar Zinciri'nden dışarı çıkmaz.
 | [🧑‍💻 Elle kurulum](#-elle-kurulum) | Asistan kullanmıyorsan |
 | [🧩 İki mağaza karışır mı?](#-iki-mağaza-karışır-mı) | Hayır — nedeni burada |
 | [💬 Ne sorabilirsin](#-ne-sorabilirsin) | Örnek komutlar |
-| [🧰 Araçlar](#-araçlar) | 32 aracın tam listesi |
+| [🧰 Araçlar](#-araçlar) | 33 aracın tam listesi |
 | [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~6.000 token |
 | [🔑 Gereken izinler](#-gereken-izinler) | Apple ve Google tarafında ne şart |
 | [🔒 Güvenlik](#-güvenlik) | Anahtarlar, onay kapıları, telemetri |
@@ -270,10 +270,10 @@ belleğe bile alınmaz, modele gösterilmez, token harcamaz.
 
 | Kurulum | Yüklenen araç |
 | --- | --- |
-| İki mağaza | 32 |
-| Yalnızca App Store | 19 |
+| İki mağaza | 33 |
+| Yalnızca App Store | 20 |
 | Yalnızca Play | 13 |
-| Salt-okunur (iki mağaza) | 24 |
+| Salt-okunur (iki mağaza) | 25 |
 
 **3. Çapraz araçlar yalnızca iki mağaza da açıkken var olur.** Tek mağazalı
 kurulumda hiç oluşturulmazlar — anlamları olmadığı için.
@@ -333,7 +333,7 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 </details>
 
 <details>
-<summary><b>App Store Connect — 16 araç</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 17 araç</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -350,7 +350,8 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 | `appstore__testflight_gruplari` | TestFlight beta gruplarını, her gruptaki test kullanıcı sayısını, genel davet linklerini ve kotalarını gösterir. |
 | `appstore__metin_guncelle` ✎ | Hazırlanmakta olan sürümün mağaza metinlerini günceller: sürüm notları, açıklama, anahtar kelimeler, tanıtım metni. |
 | `appstore__satis_raporu` | Satış/indirme raporunu TSV olarak indirir: günlük, haftalık, aylık veya yıllık; satış, ön sipariş, yükleme, abonelik, abonelik olayı, abone ve teklif kodu raporları. |
-| `appstore__abonelik_fiyat_ayarla` ✎ | Aboneliğin fiyatını **bütün ülkelerde tek seferde** ayarlar: bir fiyat verirsin (örn. USA 9.99), Apple'ın eşitleme tablosu ~175 ülkenin karşılığını çıkarır, hepsi tek istekte yazılır. |
+| `appstore__abonelik_fiyat_ayarla` ✎ | Aboneliğin fiyatını **bütün ülkelerde tek seferde** ayarlar: bir fiyat verirsin (örn. USA 9.99), Apple'ın eşitleme tablosu ~175 ülkenin karşılığını çıkarır, hepsi tek istekte yazılır. Üstüne ülkeye özel fiyat ekleyebilirsin (`{"TUR": "349.99"}`) ya da yalnızca o ülkeleri değiştirip gerisine dokunmazsın. |
+| `appstore__fiyat_analizi` | Bölgesel fiyat önerir, hiçbir şey yazmaz: Apple'ın eşit fiyatından yola çıkıp ülkenin alım gücüne (Dünya Bankası) göre yumuşatılmış indirim uygular. Fiyat asla artmaz, yarıdan fazla düşmez, zengin ülkelere dokunulmaz. Çıktısı doğrudan `abonelik_fiyat_ayarla`'ya verilir. |
 | `appstore__iap_fiyat_ayarla` ✎ | Tek seferlik satın almanın fiyatını tek bir taban ülkeden ayarlar; gerisini Apple doldurur. |
 | `appstore__abonelik_ulkeleri` ✎ | Aboneliği bütün ülkelerde (ya da verdiklerinde) tek istekte satışa açar. |
 | `appstore__abonelik_kur` ✎ | Sıfırdan abonelik kurar, tek onayla: grup → abonelik → dil metinleri → satış ülkeleri → bütün ülkelerde fiyat. |
@@ -420,7 +421,7 @@ hiçbirini kullanmasan bile her mesajda yeniden ödenir.
 
 | | Araç | Her mesajda ödenen |
 | --- | --- | --- |
-| **magaza-mcp** | 32 | **~6.000 token** |
+| **magaza-mcp** | 33 | **~6.000 token** |
 | Hepsi ayrı araç olsaydı | 1440 | ~210.000 token |
 
 > [!NOTE]
@@ -472,8 +473,8 @@ analitik raporlar daha yüksek yetki ister.
   onayladıktan sonra `onayla=true` ile tekrarlandığında yürür. Bu **sunucu
   tarafında** uygulanır — istemcinin onay arayüzüne bağlı değildir.
 - **Salt-okunur mod.** `--salt-okunur` (veya `SALT_OKUNUR=1`) yazma yapan
-  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 32 araç
-  24'e düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
+  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 33 araç
+  25'e düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
   kapısıdır — ama yazma operasyonu istendiğinde reddeder.
 - **Yol parametreleri doğrulanır.** Araçlara verilen kimlikler URL'e girmeden
   önce kodlanır; `.` ve `..` gibi yol gezinme denemeleri reddedilir. Mutlak
@@ -490,8 +491,11 @@ analitik raporlar daha yüksek yetki ister.
 - **Telemetri yok.** Hiçbir analitik, hata raporu veya kullanım verisi
   gönderilmez. Ağ trafiği yalnızca `api.appstoreconnect.apple.com`,
   `androidpublisher.googleapis.com`, `playdeveloperreporting.googleapis.com` ve
-  token için `oauth2.googleapis.com` adreslerine gider. Araya giren bir sunucu
-  yoktur; veri doğrudan senin makinenle Apple ve Google arasında akar.
+  token için `oauth2.googleapis.com` adreslerine gider. Tek istisna
+  `appstore__fiyat_analizi`: herkese açık alım gücü verisini
+  `api.worldbank.org`'dan okur (anahtarsız, senden hiçbir veri gitmez). Araya
+  giren bir sunucu yoktur; veri doğrudan senin makinenle Apple ve Google
+  arasında akar.
 
 ---
 

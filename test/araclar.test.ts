@@ -1,8 +1,8 @@
 /**
  * Araç listesi testleri.
  *
- * Buradaki sayılar README'de ve AGENTS.md'de yazılı: "iki mağazada 32, tek
- * mağazada 19/13, salt-okunurda 24". Bir araç eklenip dokümanı güncellenmezse
+ * Buradaki sayılar README'de ve AGENTS.md'de yazılı: "iki mağazada 33, tek
+ * mağazada 20/13, salt-okunurda 25". Bir araç eklenip dokümanı güncellenmezse
  * bu testler uyarır.
  *
  * Asıl önemlisi kapsam: seçilmeyen mağazanın araçlarının hiç yüklenmemesi ve
@@ -39,17 +39,17 @@ afterEach(() => {
 const adlar = (araclar: { ad: string }[]) => araclar.map((a) => a.ad);
 
 describe("araclariTopla", () => {
-  it("iki mağaza açıkken 32 araç yükler", () => {
-    assert.equal(ortamda("appstore,play").length, 32);
+  it("iki mağaza açıkken 33 araç yükler", () => {
+    assert.equal(ortamda("appstore,play").length, 33);
   });
 
   it("MAGAZALAR verilmezse iki mağaza da açıktır", () => {
-    assert.equal(ortamda(undefined).length, 32);
+    assert.equal(ortamda(undefined).length, 33);
   });
 
-  it("yalnızca App Store'da 19 araç yükler, hiç play__ aracı olmaz", () => {
+  it("yalnızca App Store'da 20 araç yükler, hiç play__ aracı olmaz", () => {
     const araclar = ortamda("appstore");
-    assert.equal(araclar.length, 19);
+    assert.equal(araclar.length, 20);
     assert.equal(adlar(araclar).filter((a) => a.startsWith("play__")).length, 0);
   });
 
@@ -71,7 +71,7 @@ describe("araclariTopla", () => {
 
   it("salt-okunur modda yazma araçları listeye hiç girmez", () => {
     const araclar = ortamda("appstore,play", true);
-    assert.equal(araclar.length, 24);
+    assert.equal(araclar.length, 25);
 
     for (const ad of [
       "appstore__yorum_yanitla",

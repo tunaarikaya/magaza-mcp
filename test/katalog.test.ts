@@ -65,6 +65,13 @@ describe("yazma araçları ağa çıkmadan girdiyi reddeder", () => {
     );
   });
 
+  it("abonelik fiyatında fiyat ya da ozel_fiyatlar zorunlu, ozel_fiyatlar nesne olmalı", async () => {
+    const fiyat = arac("appstore__abonelik_fiyat_ayarla");
+    await assert.rejects(fiyat.calistir({ abonelik_id: "1" }), /fiyat ya da ozel_fiyatlar/);
+    await assert.rejects(fiyat.calistir({ abonelik_id: "1", ozel_fiyatlar: ["TUR"] }), /nesne olmalı/);
+    await assert.rejects(fiyat.calistir({ abonelik_id: "1", ozel_fiyatlar: { TUR: "bedava" } }), /TUR fiyatı/);
+  });
+
   it("fiyat sayı olmalı", async () => {
     await assert.rejects(arac("appstore__abonelik_fiyat_ayarla").calistir({ abonelik_id: "1", fiyat: "bedava" }), /sayı/);
   });
