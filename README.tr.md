@@ -34,7 +34,7 @@ Bu soruyu tek çağrıda cevaplayabilen başka bir MCP sunucusu yok, çünkü he
 mağazaya bakıyor. `magaza-mcp` ikisini aynı anda görür.
 
 ```mermaid
-flowchart LR
+flowchart TB
     A["🤖 Asistanın<br/>Claude · Antigravity · Cursor"] -->|MCP / stdio| B["📦 magaza-mcp<br/>senin makinende"]
     B -->|appstore__| C["🍎 App Store Connect"]
     B -->|play__| D["🤖 Google Play"]

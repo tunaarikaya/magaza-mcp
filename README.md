@@ -34,7 +34,7 @@ No other MCP server can answer that in a single call, because they all look at
 one store. `magaza-mcp` sees both at once.
 
 ```mermaid
-flowchart LR
+flowchart TB
     A["🤖 Your assistant<br/>Claude · Antigravity · Cursor"] -->|MCP / stdio| B["📦 magaza-mcp<br/>runs on your machine"]
     B -->|appstore__| C["🍎 App Store Connect"]
     B -->|play__| D["🤖 Google Play"]
