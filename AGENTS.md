@@ -157,8 +157,8 @@ npx -y magaza-mcp kaydet --magazalar appstore,play --salt-okunur
 ```
 
 Bu modda yazma yapan araçlar (`appstore__yorum_yanitla`,
-`appstore__metin_guncelle`, fiyat/abonelik/yaş derecelendirme araçları, Play yayın araçları,
-`play__yorum_yanitla`) listeye hiç girmez; 39 araç 26'ya düşer. `magaza__cagir` listede kalır — katalogdaki okuma uçlarına da o
+`appstore__metin_guncelle`, fiyat/abonelik/yaş derecelendirme araçları, `appstore__hesap_duzelt`,
+Play yayın araçları, `play__yorum_yanitla`) listeye hiç girmez; 41 araç 27'ye düşer. `magaza__cagir` listede kalır — katalogdaki okuma uçlarına da o
 araçtan gidiliyor — ama veri değiştiren bir operasyon istendiğinde reddeder.
 
 Komut mevcut ayarlara dokunmaz: yalnızca `magaza-mcp` girdisini ekler veya
@@ -227,11 +227,11 @@ npx magaza-mcp kur
 
 ### Yüklü araçlar günlük işi görür
 
-İki mağaza da açıkken 39 araç yüklenir: 17 tane `appstore__`, 16 tane `play__`,
+İki mağaza da açıkken 41 araç yüklenir: 19 tane `appstore__`, 16 tane `play__`,
 3 tane iki mağazayı birden sorgulayan `magaza__`, 3 tane de aşağıdaki erişim
 aracı. Tek mağazalı kurulumda çapraz araçlar hiç oluşmaz: yalnızca App Store'da
-20, yalnızca Play'de 19 araç yüklenir. Araç tanımlarının tamamı bağlamda
-yaklaşık **8.500 token** yer kaplar.
+22, yalnızca Play'de 19 araç yüklenir. Araç tanımlarının tamamı bağlamda
+yaklaşık **9.000 token** yer kaplar.
 
 Abonelik ve IAP fiyatı, abonelik kurulumu, satış ülkeleri ve yaş
 derecelendirmesi için hazır `appstore__` araçları var. Bunları
@@ -246,6 +246,21 @@ taşıma, mağaza metni ve görsel için hazır `play__` araçları var; bunlar�
 `magaza__cagir` ile edit oturumu açıp kapatarak yapma.
 
 Hangi araçların yüklü olduğunu `npx -y magaza-mcp araclar` ile görebilirsin.
+
+### Hesap güvenliği soruları
+
+Kullanıcı "hesabım güvende mi", "ban yer miyim", "incelemem neden bu kadar
+uzun sürüyor" gibi bir şey sorarsa önce `appstore__hesap_sagligi`'nı çalıştır.
+Çıktıdaki `rapor_metni`'ni olduğu gibi göster, sonra en kritik bulgudan
+başlayarak her birini `neden` ve `cozum.adimlar` ile sade dille anlat.
+`goremediklerim`'i de söyle: araç risk sinyali verir, Apple'ın iç kararını
+göremez.
+
+Düzeltmek isterse `appstore__hesap_duzelt`'i önce `onayla` olmadan çağır,
+önizlemeyi (şimdi → yeni) kullanıcıya göster, onay alınca aynı çağrıyı
+`onayla: true` ile tekrarla. `cozum.gereken_deger` olan bulgularda değeri
+(gizlilik URL'si, copyright, demo hesap…) kullanıcıdan iste, uydurma; `degerler`
+ile bulgu id'sine bağlayarak ver.
 
 ### Yüklü olmayan her şeye de erişebilirsin
 

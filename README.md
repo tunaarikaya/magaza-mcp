@@ -62,8 +62,9 @@ directly to Apple and Google, and your keys never leave your Keychain.
 | [🧑‍💻 Manual setup](#-manual-setup) | If you're not using an assistant |
 | [🧩 Do the two stores mix up?](#-do-the-two-stores-mix-up) | No — here's why |
 | [💬 What you can ask](#-what-you-can-ask) | Example prompts |
-| [🧰 Tools](#-tools) | Full list of all 39 tools |
-| [🌐 Full API access](#-full-api-access) | 1,440 operations, ~8,500 tokens |
+| [🚨 Account health](#-account-health) | Is your Apple account at risk? |
+| [🧰 Tools](#-tools) | Full list of all 41 tools |
+| [🌐 Full API access](#-full-api-access) | 1,440 operations, ~9,000 tokens |
 | [🔑 Required permissions](#-required-permissions) | What Apple and Google require |
 | [🔒 Security](#-security) | Keys, approval gates, telemetry |
 | [🩺 Troubleshooting](#-troubleshooting) | Common errors |
@@ -274,10 +275,10 @@ model, and cost zero tokens.
 
 | Setup | Tools loaded |
 | --- | --- |
-| Both stores | 39 |
-| App Store only | 20 |
+| Both stores | 41 |
+| App Store only | 22 |
 | Play only | 19 |
-| Read-only (both stores) | 26 |
+| Read-only (both stores) | 27 |
 
 **3. Cross-store tools only exist when both stores are enabled.** In a
 single-store setup they're never created at all — they'd have no meaning.
@@ -315,6 +316,80 @@ The app names in the examples are made up; you'd use your own app's name.
 
 ---
 
+## 🚨 Account health
+
+Apple terminates developer accounts every year for spam, copycat apps and
+review manipulation — and many developers find out only when the email
+arrives. Most of them never knew they were doing anything wrong: the same
+screenshots in five apps, "Instagram" in the keywords, someone else's
+copyright left over from a template.
+
+`appstore__hesap_sagligi` scans the whole account and scores the risk from
+0 to 100:
+
+```
+You       › Is my developer account safe?
+
+Assistant › ACCOUNT RISK: 72/100  🔴 HIGH
+
+            Clones / spam (4.3)              ██████████  critical (3)
+            Metadata & trademarks (2.3/5.2)  █████░░░░░  high (4)
+            Reviews & money (5.6/3.1)        ██░░░░░░░░  low (2)
+            Review history & account         ██████░░░░  medium (3)
+
+            1. [CRITICAL] Same screenshots in 6 apps
+            2. [HIGH] Photo Pro: "instagram" in the keywords
+            3. [HIGH] 3 apps carry someone else's copyright
+            …
+```
+
+| Section | What it looks for |
+| --- | --- |
+| Clones / spam | Identical screenshots across apps, near-identical names and descriptions, `app1, app2…` bundle IDs, saturated categories, foreign copyright, many apps in a short time |
+| Metadata & trademarks | Brand names (Apple, Instagram, ChatGPT…) in names and keywords, "best / #1 / free" in the name, keyword stuffing, Android mentions, missing privacy or support URL, media downloaders, fake-function apps |
+| Reviews & money | Scam / refund complaints, 5-star bursts, copy-paste reviews, misleading review replies, refund rate, apps with no downloads, overpriced weekly subscriptions, rejected IAPs |
+| Review history & account | Rejections, reviews stuck for days, apps Apple removed, apps not updated in 3+ years, EU trader status, missing declarations (content rights, encryption, demo account, review notes, age rating), too many admins |
+
+Every finding comes with the Apple guideline, why it's risky and the steps
+to fix it.
+
+| Parameter | What it does |
+| --- | --- |
+| `uygulama` | Scan a single app (Apple id, bundle ID or name). Clone detection needs the whole account. |
+| `bolum` | Only these sections: `klon`, `metadata`, `yorum_para`, `inceleme_hesap` |
+| `derin` | All languages and 1,000 reviews per app (slower). Default: primary language + en-US, 200 reviews |
+| `satici_no` | Vendor number — adds the refund rate and 12-month download checks |
+
+**Fixing.** Findings marked automatic can be fixed with
+`appstore__hesap_duzelt`. It always shows the change first and only writes
+with `onayla=true`:
+
+```
+appstore__hesap_duzelt(bulgular: ["anahtar-marka:1234567:en-US"])
+  → preview: keywords "photo,instagram,edit" → "photo,edit"
+appstore__hesap_duzelt(bulgular: ["anahtar-marka:1234567:en-US"], onayla: true)
+  → applied
+```
+
+Findings that need a value (privacy URL, copyright, demo account) take it
+through `degerler`. If there's no editable version, it tells you instead of
+creating one. Heavy moves — pulling an app from sale, demoting an admin —
+are only explained, never done.
+
+> **What it can't see.** The API doesn't expose Apple's internal flags,
+> rejection reasons or Resolution Center messages, or links to other
+> accounts (same device, card or freelancer — the most common unexplained
+> termination). So the tool reports risk signals, not a verdict, and says
+> what it couldn't check.
+
+Ask things like:
+
+- *"Is my developer account safe?"*
+- *"Why is my review taking so long?"*
+- *"Fix the keyword problems you found, but show me first."*
+
+---
+
 ## 🧰 Tools
 
 The prefix tells you which store a tool goes to. Tools marked **✎** modify
@@ -336,7 +411,7 @@ These tools only load when both stores are connected.
 </details>
 
 <details>
-<summary><b>App Store Connect — 17 tools</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 19 tools</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -359,6 +434,8 @@ These tools only load when both stores are connected.
 | `appstore__abonelik_ulkeleri` ✎ | Makes a subscription available in every country (or the ones you list) in one request. |
 | `appstore__abonelik_kur` ✎ | Creates a subscription from scratch behind one approval: group → subscription → localized names → availability → prices in all countries. |
 | `appstore__yas_derecelendirme` ✎ | Reads or fills in the age rating questionnaire (Apple's 2025 questions). Finds the editable app info by itself; only the answers you give change. |
+| `appstore__hesap_sagligi` | Scans the whole developer account for termination, removal and long-review risk: a 0–100 score, findings tied to Apple guidelines, why each one is risky and how to fix it. See [Account health](#-account-health). |
+| `appstore__hesap_duzelt` ✎ | Fixes findings from `hesap_sagligi` by id: shows current → new first, applies with `onayla=true`. Never creates a version, removes an app or changes roles. |
 
 </details>
 
@@ -432,7 +509,7 @@ any of them.
 
 | | Tools | Paid on every message |
 | --- | --- | --- |
-| **magaza-mcp** | 39 | **~8,500 tokens** |
+| **magaza-mcp** | 41 | **~9,000 tokens** |
 | If all were separate tools | 1,440 | ~210,000 tokens |
 
 > [!NOTE]
@@ -489,7 +566,7 @@ some analytics reports need higher privileges.
   the client's approval UI.
 - **Read-only mode.** `--salt-okunur` (or `SALT_OKUNUR=1`) removes every
   write-capable tool from the list entirely: the model can't see them or call
-  them. 39 tools become 26. `magaza__cagir` stays in the list because it's
+  them. 41 tools become 27. `magaza__cagir` stays in the list because it's
   also the single gateway for read endpoints in the catalog — but it refuses
   write operations when read-only mode is on.
 - **Path parameters are validated.** IDs passed to tools are encoded before

@@ -16,6 +16,7 @@ import {
 
 import { appstoreAraclari } from "./araclar/appstore.js";
 import { appstoreYazmaAraclari } from "./araclar/appstore-yazma.js";
+import { saglikAraclari } from "./araclar/saglik/index.js";
 import { dispatchAraclari } from "./araclar/dispatch.js";
 import { ortakAraclar } from "./araclar/ortak.js";
 import { playAraclari } from "./araclar/play.js";
@@ -49,7 +50,7 @@ export function araclariTopla(): Arac[] {
   const acik = acikMagazalar();
   const hepsi: Arac[] = [];
 
-  if (acik.appstore) hepsi.push(...appstoreAraclari(), ...appstoreYazmaAraclari());
+  if (acik.appstore) hepsi.push(...appstoreAraclari(), ...appstoreYazmaAraclari(), ...saglikAraclari());
   if (acik.play) hepsi.push(...playAraclari(), ...playYazmaAraclari());
   hepsi.push(...ortakAraclar());
   hepsi.push(...dispatchAraclari());

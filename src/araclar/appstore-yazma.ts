@@ -330,7 +330,7 @@ function cevaplariDogrula(ham: unknown): Record<string, unknown> {
 }
 
 /** Bu durumdaki appInfo yayında ya da incelemede; Apple düzenlemeyi 409 ile reddeder. */
-const KILITLI_DURUMLAR = new Set([
+export const KILITLI_DURUMLAR = new Set([
   "ACCEPTED",
   "IN_REVIEW",
   "PENDING_RELEASE",

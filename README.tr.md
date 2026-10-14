@@ -62,8 +62,9 @@ Google ile konuşur, anahtarın Anahtar Zinciri'nden dışarı çıkmaz.
 | [🧑‍💻 Elle kurulum](#-elle-kurulum) | Asistan kullanmıyorsan |
 | [🧩 İki mağaza karışır mı?](#-iki-mağaza-karışır-mı) | Hayır — nedeni burada |
 | [💬 Ne sorabilirsin](#-ne-sorabilirsin) | Örnek komutlar |
-| [🧰 Araçlar](#-araçlar) | 39 aracın tam listesi |
-| [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~8.500 token |
+| [🚨 Hesap sağlığı](#-hesap-sağlığı) | Apple hesabın risk altında mı? |
+| [🧰 Araçlar](#-araçlar) | 41 aracın tam listesi |
+| [🌐 Tam API erişimi](#-tam-api-erişimi) | 1440 operasyon, ~9.000 token |
 | [🔑 Gereken izinler](#-gereken-izinler) | Apple ve Google tarafında ne şart |
 | [🔒 Güvenlik](#-güvenlik) | Anahtarlar, onay kapıları, telemetri |
 | [🩺 Sorun giderme](#-sorun-giderme) | Sık karşılaşılan hatalar |
@@ -270,10 +271,10 @@ belleğe bile alınmaz, modele gösterilmez, token harcamaz.
 
 | Kurulum | Yüklenen araç |
 | --- | --- |
-| İki mağaza | 39 |
-| Yalnızca App Store | 20 |
+| İki mağaza | 41 |
+| Yalnızca App Store | 22 |
 | Yalnızca Play | 19 |
-| Salt-okunur (iki mağaza) | 26 |
+| Salt-okunur (iki mağaza) | 27 |
 
 **3. Çapraz araçlar yalnızca iki mağaza da açıkken var olur.** Tek mağazalı
 kurulumda hiç oluşturulmazlar — anlamları olmadığı için.
@@ -312,6 +313,79 @@ kullanırsın.
 
 ---
 
+## 🚨 Hesap sağlığı
+
+Apple her yıl spam, kopya uygulama ve yorum manipülasyonu yüzünden
+geliştirici hesaplarını kapatıyor — çoğu geliştirici durumu e-posta gelince
+öğreniyor. Çoğu da yanlış bir şey yaptığını bilmiyordu: beş uygulamada aynı
+ekran görüntüleri, anahtar kelimelerde "Instagram", şablondan kalan
+başkasının copyright'ı.
+
+`appstore__hesap_sagligi` hesabın tamamını tarar ve riski 0'dan 100'e
+puanlar:
+
+```
+Sen       › Hesabım güvende mi?
+
+Asistan   › HESAP RİSKİ: 72/100  🔴 YÜKSEK
+
+            Klon / spam (4.3)              ██████████  kritik (3)
+            Metadata & marka (2.3 / 5.2)   █████░░░░░  yuksek (4)
+            Yorum & para (5.6 / 3.1)       ██░░░░░░░░  dusuk (2)
+            İnceleme geçmişi & hesap       ██████░░░░  orta (3)
+
+            1. [KRİTİK] 6 uygulamada aynı ekran görüntüleri
+            2. [YÜKSEK] Foto Pro: anahtar kelimelerde "instagram"
+            3. [YÜKSEK] 3 uygulamada başkasının copyright'ı
+            …
+```
+
+| Bölüm | Neye bakar |
+| --- | --- |
+| Klon / spam | Uygulamalar arası aynı ekran görüntüleri, neredeyse aynı isim ve açıklamalar, `app1, app2…` bundle ID'leri, doymuş kategoriler, yabancı copyright, kısa sürede çok uygulama |
+| Metadata & marka | İsim ve anahtar kelimelerde marka adları (Apple, Instagram, ChatGPT…), isimde "en iyi / #1 / ücretsiz", kelime doldurma, Android geçmesi, eksik gizlilik ya da destek URL'si, medya indiriciler, sahte işlev vaat eden uygulamalar |
+| Yorum & para | Dolandırıcılık / iade şikâyetleri, 5 yıldız patlamaları, kopya yorumlar, yanıltıcı yorum yanıtları, iade oranı, hiç indirilmeyen uygulamalar, pahalı haftalık abonelikler, reddedilmiş IAP'ler |
+| İnceleme geçmişi & hesap | Redler, günlerdir bekleyen inceleme, Apple'ın kaldırdığı uygulamalar, 3+ yıldır güncellenmeyenler, AB trader durumu, eksik beyanlar (içerik hakları, şifreleme, demo hesap, inceleme notu, yaş anketi), fazla Admin |
+
+Her bulgu Apple maddesi, neden riskli olduğu ve çözüm adımlarıyla gelir.
+
+| Parametre | Ne yapar |
+| --- | --- |
+| `uygulama` | Tek uygulamayı tara (Apple id, bundle ID ya da ad). Klon tespiti için tüm hesap gerekir. |
+| `bolum` | Yalnızca bu bölümler: `klon`, `metadata`, `yorum_para`, `inceleme_hesap` |
+| `derin` | Tüm diller ve uygulama başına 1000 yorum (daha yavaş). Varsayılan: ana dil + en-US, 200 yorum |
+| `satici_no` | Vendor number — iade oranı ve 12 aylık indirme kontrolünü ekler |
+
+**Düzeltme.** Otomatik işaretli bulgular `appstore__hesap_duzelt` ile
+düzeltilir. Her zaman önce değişikliği gösterir, yalnızca `onayla=true` ile
+yazar:
+
+```
+appstore__hesap_duzelt(bulgular: ["anahtar-marka:1234567:en-US"])
+  → önizleme: anahtar kelimeler "photo,instagram,edit" → "photo,edit"
+appstore__hesap_duzelt(bulgular: ["anahtar-marka:1234567:en-US"], onayla: true)
+  → uygulandı
+```
+
+Değer isteyen bulgular (gizlilik URL'si, copyright, demo hesap) değeri
+`degerler` ile alır. Düzenlenebilir sürüm yoksa yenisini açmaz, söyler. Ağır
+müdahaleler — uygulamayı satıştan kaldırmak, bir Admin'in rolünü düşürmek —
+yalnızca anlatılır, yapılmaz.
+
+> **Göremedikleri.** API; Apple'ın iç işaretlerini, red gerekçelerini ve
+> Resolution Center mesajlarını, başka hesaplarla bağlantıları (aynı cihaz,
+> kart ya da freelancer — açıklamasız kapatmaların en sık sebebi) vermez. Bu
+> yüzden araç hüküm değil risk sinyali verir ve neyi kontrol edemediğini
+> söyler.
+
+Şunları sorabilirsin:
+
+- *"Hesabım güvende mi?"*
+- *"Neden incelemem bu kadar uzun sürüyor?"*
+- *"Bulduğun anahtar kelime sorunlarını düzelt, ama önce bana göster."*
+
+---
+
 ## 🧰 Araçlar
 
 Önek hangi mağazaya gidildiğini söyler. **✎** işaretli araçlar veri değiştirir
@@ -333,7 +407,7 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 </details>
 
 <details>
-<summary><b>App Store Connect — 17 araç</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 19 araç</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -356,6 +430,8 @@ Bu araçlar yalnızca iki mağaza da bağlıyken yüklenir.
 | `appstore__abonelik_ulkeleri` ✎ | Aboneliği bütün ülkelerde (ya da verdiklerinde) tek istekte satışa açar. |
 | `appstore__abonelik_kur` ✎ | Sıfırdan abonelik kurar, tek onayla: grup → abonelik → dil metinleri → satış ülkeleri → bütün ülkelerde fiyat. |
 | `appstore__yas_derecelendirme` ✎ | Yaş derecelendirme anketini okur veya doldurur (Apple'ın 2025 soruları). Düzenlenebilir appInfo'yu kendisi bulur; yalnızca verdiğin cevaplar değişir. |
+| `appstore__hesap_sagligi` | Geliştirici hesabının tamamını kapatılma, kaldırılma ve uzun inceleme riskine karşı tarar: 0–100 puan, Apple maddesine bağlı bulgular, her birinin neden riskli olduğu ve nasıl çözüleceği. Bkz. [Hesap sağlığı](#-hesap-sağlığı). |
+| `appstore__hesap_duzelt` ✎ | `hesap_sagligi`'nın bulgularını id ile düzeltir: önce şimdi → yeni farkını gösterir, `onayla=true` ile uygular. Sürüm açmaz, uygulama kaldırmaz, rol değiştirmez. |
 
 </details>
 
@@ -427,7 +503,7 @@ hiçbirini kullanmasan bile her mesajda yeniden ödenir.
 
 | | Araç | Her mesajda ödenen |
 | --- | --- | --- |
-| **magaza-mcp** | 39 | **~8.500 token** |
+| **magaza-mcp** | 41 | **~9.000 token** |
 | Hepsi ayrı araç olsaydı | 1440 | ~210.000 token |
 
 > [!NOTE]
@@ -479,8 +555,8 @@ analitik raporlar daha yüksek yetki ister.
   onayladıktan sonra `onayla=true` ile tekrarlandığında yürür. Bu **sunucu
   tarafında** uygulanır — istemcinin onay arayüzüne bağlı değildir.
 - **Salt-okunur mod.** `--salt-okunur` (veya `SALT_OKUNUR=1`) yazma yapan
-  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 39 araç
-  26'ya düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
+  araçları listeden tamamen çıkarır: model onları göremez, çağıramaz. 41 araç
+  27'ye düşer. `magaza__cagir` listede kalır çünkü okuma uçlarının da tek
   kapısıdır — ama yazma operasyonu istendiğinde reddeder.
 - **Yol parametreleri doğrulanır.** Araçlara verilen kimlikler URL'e girmeden
   önce kodlanır; `.` ve `..` gibi yol gezinme denemeleri reddedilir. Mutlak

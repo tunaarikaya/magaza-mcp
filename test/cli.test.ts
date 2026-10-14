@@ -159,9 +159,9 @@ describe("genel komutlar", () => {
     assert.match(cikti, /Bilinmeyen komut/);
   });
 
-  it("araclar listesi 39 aracı sayar", () => {
+  it("araclar listesi 41 aracı sayar", () => {
     const { kod, cikti } = calistir("araclar");
     assert.equal(kod, 0);
-    assert.match(cikti, /39 araç yüklü/);
+    assert.match(cikti, /41 araç yüklü/);
   });
 });
