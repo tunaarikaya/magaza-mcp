@@ -33,20 +33,12 @@ https://github.com/tunaarikaya/magaza-mcp — bunu kur, AGENTS.md'yi oku
 Bu soruyu tek çağrıda cevaplayabilen başka bir MCP sunucusu yok, çünkü hepsi tek
 mağazaya bakıyor. `magaza-mcp` ikisini aynı anda görür.
 
-```mermaid
-flowchart TB
-    A["🤖 Asistanın<br/>Claude · Antigravity · Cursor"] -->|MCP / stdio| B["📦 magaza-mcp<br/>senin makinende"]
-    B -->|appstore__| C["🍎 App Store Connect"]
-    B -->|play__| D["🤖 Google Play"]
-    B -->|magaza__| E["🔀 İkisi birden<br/>karşılaştırma · teşhis"]
-    E -.-> C
-    E -.-> D
-    F["🔑 Anahtar Zinciri"] -.->|anahtarlar burada kalır| B
-
-    style B fill:#2d6cdf,stroke:#1a4a9e,color:#fff
-    style E fill:#7c3aed,stroke:#5b21b6,color:#fff
-    style F fill:#059669,stroke:#047857,color:#fff
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/mimari-dark.svg">
+    <img src="docs/mimari-light.svg" alt="magaza-mcp, yapay zekâ asistanın ile App Store Connect ve Google Play API'leri arasında senin makinende çalışır; anahtarlar Anahtar Zinciri'nde kalır." width="880">
+  </picture>
+</p>
 
 Araya giren sunucu yok: paket senin makinende çalışır, doğrudan Apple ve
 Google ile konuşur, anahtarın Anahtar Zinciri'nden dışarı çıkmaz.

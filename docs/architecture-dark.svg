@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="880" height="316" viewBox="0 0 880 316" role="img" aria-label="magaza-mcp runs on your machine between your AI assistant and the App Store Connect and Google Play APIs; keys stay in your Keychain.">
+  <defs>
+    <marker id="ok" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M2 1.5 L8.5 5 L2 8.5" fill="none" stroke="#6e7681" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <rect x="16" y="16" width="566" height="284" rx="16" fill="none" stroke="#30363d" stroke-dasharray="4 5"/>
+  <text x="36" y="40" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.4" fill="#6e7681">YOUR MACHINE</text>
+  <text x="758" y="40" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="10.5" font-weight="600" letter-spacing="1.4" fill="#6e7681">OFFICIAL APIS</text>
+
+  <path d="M228 132 H312" stroke="#6e7681" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ok)"/>
+  <text x="270" y="122" text-anchor="middle" font-size="11" fill="#8b949e" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace">MCP · stdio</text>
+  <path d="M556 132 H592 Q604 132 604 120 V96 Q604 84 616 84 H646" stroke="#6e7681" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ok)"/>
+  <path d="M556 132 H592 Q604 132 604 144 V168 Q604 180 616 180 H646" stroke="#6e7681" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#ok)"/>
+  <path d="M436 226 V192" stroke="#6e7681" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="3 4" marker-end="url(#ok)"/>
+  <text x="446" y="211" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="11" fill="#8b949e">read at runtime</text>
+
+  <rect x="36" y="96" width="192" height="72" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="132" y="129" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="14" fill="#e6edf3" font-weight="600">AI assistant</text>
+  <text x="132" y="147" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="11.5" fill="#8b949e" >Claude · Cursor · Antigravity</text>
+  <rect x="316" y="76" width="240" height="112" rx="12" fill="#0f1f38" stroke="#4493f8" stroke-width="1.5"/>
+  <text x="436" y="108" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="15" fill="#e6edf3" font-weight="600">magaza-mcp</text>
+  <text x="436" y="128" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="11.5" fill="#8b949e" >runs locally · 41 tools</text>
+  <rect x="330.2" y="148" width="78" height="20" rx="10" fill="#1b3358"/>
+  <text x="369.2" y="162" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" fill="#a5d6ff">appstore__</text>
+  <rect x="416.2" y="148" width="52.400000000000006" height="20" rx="10" fill="#1b3358"/>
+  <text x="442.4" y="162" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" fill="#a5d6ff">play__</text>
+  <rect x="476.6" y="148" width="65.2" height="20" rx="10" fill="#1b3358"/>
+  <text x="509.20000000000005" y="162" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="10.5" fill="#a5d6ff">magaza__</text>
+
+  <rect x="341" y="228" width="190" height="52" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="436" y="251" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="14" fill="#e6edf3" font-weight="600">Keychain</text>
+  <text x="436" y="269" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="11.5" fill="#8b949e" >credentials stay here</text>
+
+  <rect x="650" y="55" width="214" height="58" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="757" y="81" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="14" fill="#e6edf3" font-weight="600">App Store Connect</text>
+  <text x="757" y="99" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="11.5" fill="#8b949e" >iOS · macOS</text>
+
+  <rect x="650" y="151" width="214" height="58" rx="10" fill="#161b22" stroke="#30363d"/>
+  <text x="757" y="177" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="14" fill="#e6edf3" font-weight="600">Google Play Console</text>
+  <text x="757" y="195" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif" font-size="11.5" fill="#8b949e" >Android</text>
+</svg>

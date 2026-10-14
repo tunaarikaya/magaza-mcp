@@ -33,20 +33,12 @@ https://github.com/tunaarikaya/magaza-mcp — install this, read AGENTS.md
 No other MCP server can answer that in a single call, because they all look at
 one store. `magaza-mcp` sees both at once.
 
-```mermaid
-flowchart TB
-    A["🤖 Your assistant<br/>Claude · Antigravity · Cursor"] -->|MCP / stdio| B["📦 magaza-mcp<br/>runs on your machine"]
-    B -->|appstore__| C["🍎 App Store Connect"]
-    B -->|play__| D["🤖 Google Play"]
-    B -->|magaza__| E["🔀 Both at once<br/>comparison · diagnostics"]
-    E -.-> C
-    E -.-> D
-    F["🔑 Keychain"] -.->|keys stay here| B
-
-    style B fill:#2d6cdf,stroke:#1a4a9e,color:#fff
-    style E fill:#7c3aed,stroke:#5b21b6,color:#fff
-    style F fill:#059669,stroke:#047857,color:#fff
-```
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg">
+    <img src="docs/architecture-light.svg" alt="magaza-mcp runs on your machine between your AI assistant and the App Store Connect and Google Play APIs; keys stay in your Keychain." width="880">
+  </picture>
+</p>
 
 No server sits in the middle: the package runs on your own machine, talks
 directly to Apple and Google, and your keys never leave your Keychain.
