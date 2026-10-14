@@ -9,7 +9,7 @@ import type { Arac } from "../tip.js";
 import { AGIRLIK, analizEt, bolumOf, puanla } from "./analiz.js";
 import { hesapDuzelt } from "./duzelt.js";
 import { hesapVerisiTopla } from "./topla.js";
-import { BOLUMLER, KURALLAR, type Bolum, type Bulgu, type Ciddiyet } from "./tip.js";
+import { BOLUMLER, KURALLAR, SESSIZ_DUZELTME, type Bolum, type Bulgu, type Ciddiyet } from "./tip.js";
 
 const BOLUM_ADI: Record<Bolum, string> = {
   klon: "Klon / spam (4.3)",
@@ -29,7 +29,7 @@ const GOREMEDIKLERIM = [
 ];
 
 const TAVSIYE = [
-  "Apple 'Pending Termination' bildirimi gönderirse genelde 14 gün (bazen 30) içinde App Review Board'a itiraz hakkın var; süreyi kaçırma.",
+  "Apple 'Pending Termination' bildirimi gönderirse genelde 14 gün (bazen 30) içinde cevap hakkın var; süreyi kaçırma, kısa ve dürüst yaz, neyi ne zaman düzelttiğini söyle.",
   "Bildirim aldıktan sonra yeni hesap açma — Apple bunu 'bağlantılı hesap' sayıp onu da kapatır.",
   "Hesabına erişimi olan freelancer'ları ve devraldığın (transfer) uygulamaları gözden geçir; kapatılmış bir hesapla bağın senin hesabını da yakar.",
 ];
@@ -51,6 +51,7 @@ function disaVer(b: Bulgu) {
     cozum: {
       otomatik: !!b.duzeltme && !b.duzeltme.engel,
       adimlar: b.adimlar,
+      ...(b.yapma?.length ? { yapma: b.yapma } : {}),
       ...(b.duzeltme?.gerekenDeger ? { gereken_deger: b.duzeltme.gerekenDeger } : {}),
       ...(b.duzeltme?.engel ? { engel: b.duzeltme.engel } : {}),
     },
@@ -75,7 +76,9 @@ export function saglikAraclari(): Arac[] {
         "metadata ihlalleri, şikâyet ve sahte yorum sinyalleri, iade oranı, red geçmişi, uzun bekleyen " +
         "inceleme, eksik beyanlar. Her bulgu Apple maddesi, neden tehlikeli olduğu ve çözüm adımlarıyla " +
         "gelir; 'otomatik' olanlar appstore__hesap_duzelt ile düzeltilebilir. Salt okunur. Kullanıcıya " +
-        "önce rapor_metni'ni göster, sonra en kritik bulgulardan başlayarak açıkla.",
+        "önce rapor_metni'ni göster, sonra en kritik bulgulardan başlayarak açıkla. Çözüm önerirken çıktıdaki " +
+        "'ilke'ye uy: sorunu sessizce kendi tarafında düzelttir, kullanıcıyı Apple'a kendiliğinden yazmaya, " +
+        "yorum raporlamaya ya da açıklama yapmaya yönlendirme; her bulgunun 'yapma' listesini mutlaka söyle.",
       girdiSemasi: {
         type: "object",
         properties: {
@@ -141,6 +144,7 @@ export function saglikAraclari(): Arac[] {
           puanlama:
             `Her bulgu bağımsız risk sayılır (kritik %${AGIRLIK.kritik} · yüksek %${AGIRLIK.yuksek} · ` +
             `orta %${AGIRLIK.orta} · düşük %${AGIRLIK.dusuk}); puan = en az birinin gerçekleşme olasılığı.`,
+          ilke: SESSIZ_DUZELTME,
           goremediklerim: GOREMEDIKLERIM,
           tavsiye: TAVSIYE,
           taranan: {

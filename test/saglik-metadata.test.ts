@@ -162,5 +162,19 @@ describe("metadataKurallari", () => {
     const b = bul(calistir(ornekUygulama("1", { bilgiler: [eski, yeni] })), "konsept-degisimi")!;
     assert.equal(b.ciddiyet, "yuksek");
     assert.deepEqual((b.kanit as any).kategori, { eski: "PRODUCTIVITY", yeni: "GAMES" });
+    // Sessiz düzeltme: Apple'a kendiliğinden açıklama yönlendirmesi yok, 'yapma' listesi var.
+    assert.ok(![b.neden, ...b.adimlar].some((s) => /apple'a açıkla/i.test(s)));
+    assert.ok(b.yapma?.length);
+  });
+
+  it("her metadata bulgusunun 'yapma' listesi var", () => {
+    const l = calistir(
+      ornekUygulama("1", {
+        bilgiler: [info("Best Instagram Saver, Free | Pro", {}, "video downloader vpn")],
+        surumYerel: [{ id: "vl-1", dil: "en-US", aciklama: "Also on Android.", anahtarKelimeler: "tiktok,app, saver" }],
+      }),
+    );
+    assert.ok(l.length >= 5);
+    for (const b of l) assert.ok(b.yapma?.length, `${b.kural} yapma listesi boş`);
   });
 });

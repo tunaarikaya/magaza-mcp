@@ -372,6 +372,12 @@ Değer isteyen bulgular (gizlilik URL'si, copyright, demo hesap) değeri
 müdahaleler — uygulamayı satıştan kaldırmak, bir Admin'in rolünü düşürmek —
 yalnızca anlatılır, yapılmaz.
 
+**Sessiz düzeltme.** Tavsiyeler seni Apple'ın kapısını çalmaya itmez: sorun
+kendi tarafında, mümkünse bir sonraki normal güncellemeyle düzeltilir; yorum
+raporlamak, App Review'a kendiliğinden yazmak ya da açıklama yapmak önerilmez.
+Apple sorarsa kısa ve dürüst cevap verilir. Her bulgu bir "yapma" listesiyle
+gelir — göze batıran refleksler orada yazar.
+
 > **Göremedikleri.** API; Apple'ın iç işaretlerini, red gerekçelerini ve
 > Resolution Center mesajlarını, başka hesaplarla bağlantıları (aynı cihaz,
 > kart ya da freelancer — açıklamasız kapatmaların en sık sebebi) vermez. Bu

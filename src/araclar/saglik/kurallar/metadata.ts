@@ -175,8 +175,12 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         "reddeder; marka sahibi şikâyet ederse uygulama kaldırılır, tekrarı hesabı riske atar.",
       kanit: { markalar, diller: markali.map((x) => x.s.dil) },
       adimlar: [
-        "Anahtar kelimelerden marka adlarını çıkar; onların yerine uygulamanın gerçekte yaptığı işi anlatan kelimeler koy.",
-        "Değişiklik bir sonraki sürümle incelemeye gider.",
+        "Bir sonraki normal güncellemende anahtar kelimelerden marka adlarını çıkar.",
+        "Açılan yere uygulamanın gerçekte yaptığı işi anlatan kelimeler koy.",
+      ],
+      yapma: [
+        "Marka adını başka bir yazımla (1nstagram, insta, tik tok) geri koyma — Apple bunu da yakalar.",
+        "Sadece bunun için ayrı, acele bir gönderim yapma; normal güncellemene kat.",
       ],
       duzeltme: {
         engel: surumEngel,
@@ -205,12 +209,16 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
           ? "Apple markalarını (iPhone, iOS, Apple Watch…) isimde kullanmak 5.2.5'e göre doğrudan red sebebi; ısrar " +
             "edilirse uygulama kaldırılır."
           : "Başka şirketin markasını isimde kullanmak taklit (4.1) ve fikri mülkiyet ihlali sayılır; marka sahibi " +
-            "şikâyet ederse uygulama kaldırılır, tekrarı hesap kapatma sebebi olur.",
+            "şikâyet ederse uygulama kaldırılır, tekrarlanırsa hesap da risk altına girer.",
         kanit: { markalar, diller: isimMarkali.map((x) => x.y.dil) },
         adimlar: [
-          "İsmi ve alt başlığı marka adı geçmeyecek şekilde yeniden yaz (en çok 30 karakter).",
-          "\"for Instagram\", \"iPhone için\" gibi ifadeler de ihlal sayılır.",
-          "Birden çok dil etkileniyorsa her dil için ayrı düzelt; düzeltme önce ana dili hedefler.",
+          "Bir sonraki normal güncellemende ismi ve alt başlığı marka adı geçmeyecek şekilde yeniden yaz (en çok 30 karakter).",
+          "\"for Instagram\", \"iPhone için\" gibi ifadeler de ihlal sayılır; işlevi anlatan genel kelimeler kullan.",
+          "Düzeltme önce ana dili hedefler; sonra diğer dilleri de aynı güncellemeye kat.",
+        ],
+        yapma: [
+          "Marka adını başka bir yazımla (1nstagram, Insta, ChatGBT) geri koyma.",
+          "İkonda ya da ekran görüntülerinde o markanın logosunu kullanmaya devam etme.",
         ],
         duzeltme: {
           engel: infoEngel,
@@ -244,9 +252,10 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
       baslik: `İsim veya alt başlıkta yasak ifade var: ${ifadeler.join(", ")}`,
       neden:
         "Apple isim ve alt başlıkta 'en iyi', '#1', 'ücretsiz', 'indirim' gibi sıralama ve fiyat iddialarını yasaklar " +
-        "(2.3.7). Metadata reddi gelir; tekrarlanırsa hesap 'yanıltıcı metadata' kaydı toplar.",
+        "(2.3.7). Bir sonraki gönderimde metadata reddi gelebilir.",
       kanit: { ifadeler, diller: yasakli.map((x) => x.y.dil) },
-      adimlar: ["Bu ifadeleri isim ve alt başlıktan çıkar; fiyat ve sıralama iddiasını hiçbir metadata alanında yapma."],
+      adimlar: ["Bir sonraki normal güncellemende bu ifadeleri isim ve alt başlıktan çıkar."],
+      yapma: ["Aynı iddiayı ekran görüntüsüne ya da tanıtım metnine taşıma (\"#1\", \"ücretsiz\" orada da sayılır)."],
       ...(guvenli
         ? {
             duzeltme: {
@@ -281,9 +290,10 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         "boşluk 100 karakterlik alanı boşa yer. Aşırı tekrar 'keyword stuffing' gibi de görünebilir.",
       kanit: tekrarli.map(({ s, temiz }) => ({ dil: s.dil, kazanc: s.anahtarKelimeler!.length - temiz.length })),
       adimlar: [
-        "Tekrarları, isim/alt başlıkta zaten geçen kelimeleri ve 'app'i sil; virgülden sonra boşluk bırakma.",
+        "Bir sonraki normal güncellemende tekrarları, isim/alt başlıkta zaten geçen kelimeleri ve 'app'i sil; virgülden sonra boşluk bırakma.",
         "Açılan yere yeni, alakalı anahtar kelimeler ekle.",
       ],
+      yapma: ["Açılan yere rakip ya da marka adı doldurma."],
       duzeltme: {
         engel: surumEngel,
         degisim: tekrarli.map(({ s }, i) => ({ alan: `keywords (${s.dil})`, simdi: s.anahtarKelimeler, yeni: yeni[i] })),
@@ -307,13 +317,13 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         ciddiyet: "orta",
         baslik: `İsme anahtar kelime dizilmiş: "${hedef.ad}"`,
         neden:
-          "İsme virgül ya da tire ile anahtar kelime dizmek (2.3.7) Apple'ın en sık metadata reddi; tekrarında hesap " +
-          "'aramayı manipüle etme' (DPLA 3.2(f)) kaydı toplar.",
+          "İsme virgül ya da tire ile anahtar kelime dizmek (2.3.7) Apple'ın en sık metadata reddi sebeplerinden.",
         kanit: { isimler: dolu.map((y) => ({ dil: y.dil, ad: y.ad })) },
         adimlar: [
-          "İsmi markan + en fazla bir tanımlayıcı olacak şekilde kısalt (ör. \"Lumo: Photo Editor\").",
+          "Bir sonraki normal güncellemende ismi markan + en fazla bir tanımlayıcı olacak şekilde kısalt (ör. \"Lumo: Photo Editor\").",
           "Çıkardığın kelimeleri anahtar kelime alanına taşı.",
         ],
+        yapma: ["Aynı gün tüm dillerde ve tüm uygulamalarda isim değiştirip incelemeye yığma; uygulama uygulama, normal güncellemeyle ilerle."],
         duzeltme: {
           engel: infoEngel,
           gerekenDeger: `yeni kısa isim (${hedef.dil}, en çok 30 karakter)`,
@@ -347,9 +357,10 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
           "düzeltilene kadar sürüm yayına çıkmaz.",
         kanit: { platformlar, yerler: platformlu.map((x) => `${x.s.dil}: ${x.a.ad}`) },
         adimlar: [
-          "Metinden başka platform adlarını ve 'Android'de de var' gibi cümleleri çıkar.",
-          "Birden çok dil/alan etkileniyorsa her biri ayrı düzeltilir; düzeltme önce ana dili hedefler.",
+          "Bir sonraki normal güncellemende metinden başka platform adlarını ve 'Android'de de var' gibi cümleleri çıkar.",
+          "Birden çok dil/alan etkileniyorsa hepsini aynı güncellemeye kat; düzeltme önce ana dili hedefler.",
         ],
+        yapma: ["Başka platformu ekran görüntülerinde ya da 'yenilikler' metninde anmaya devam etme."],
         duzeltme: {
           engel: surumEngel,
           gerekenDeger: `yeni ${hedef.a.ad} (${hedef.s.dil}, en çok ${hedef.a.sinir} karakter)`,
@@ -376,6 +387,7 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         "Herkese açık, https ile çalışan bir gizlilik politikası sayfası yayınla.",
         "App Store Connect → Uygulama Bilgileri → Gizlilik Politikası URL'sine ekle (her dil için).",
       ],
+      yapma: ["Boş, 404 veren ya da başka bir uygulamaya ait şablon sayfayı bağlama — inceleyen tıklayıp bakar."],
       duzeltme: {
         engel: infoEngel,
         gerekenDeger: "gizlilik politikası URL'si (https://…)",
@@ -399,7 +411,8 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         "Destek bağlantısı zorunlu ve kullanıcının sana ulaşabileceği çalışan bir sayfa olmalı (1.5, 2.1); eksikse " +
         "sürüm reddedilir.",
       kanit: { diller: destekEksik.map((s) => s.dil) },
-      adimlar: ["İletişim bilgisi içeren bir destek sayfası yayınla ve her dilin Destek URL'sine ekle."],
+      adimlar: ["İletişim bilgisi içeren bir destek sayfası yayınla ve bir sonraki güncellemende her dilin Destek URL'sine ekle."],
+      yapma: ["Ana sayfaya ya da çalışmayan bir adrese yönlendirme — sayfada sana ulaşmanın bir yolu olmalı."],
       duzeltme: {
         engel: surumEngel,
         gerekenDeger: "destek sayfası URL'si (https://…)",
@@ -429,9 +442,13 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         "kapatma riski.",
       kanit: { terimler: medya },
       adimlar: [
-        "Uygulama gerçekten üçüncü taraf içerik indiriyorsa bu özelliği kaldır ya da hak sahibinden yazılı izin al.",
-        "İndirme çağrışımı yapan kelimeleri isim, alt başlık, anahtar kelime ve açıklamadan çıkar.",
-        "Yanlış alarmsa (ör. kendi içeriğini çevrimdışı kaydetme), inceleme notunda bunu açıkça yaz.",
+        "Uygulama gerçekten üçüncü taraf içerik indiriyorsa bir sonraki sürümde bu işlevi koddan tamamen kaldır.",
+        "Aynı sürümde indirme çağrışımı yapan kelimeleri isim, alt başlık, anahtar kelime ve açıklamadan çıkar.",
+        "Yanlış alarmsa (ör. kendi içeriğini çevrimdışı kaydetme), uygulamayı gerçek işlevine göre yeniden konumla.",
+      ],
+      yapma: [
+        "Sadece metindeki kelimeyi silip işlevi gizlice bırakma — bu 2.3.1 'gizli özellik' olur, daha ağır.",
+        "Apple'a kendiliğinden açıklama yazma.",
       ],
     });
   }
@@ -448,8 +465,12 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         "hesabını yanıltıcı bir uygulama yüzünden kapattı.",
       kanit: { terimler: sahte },
       adimlar: [
-        "Uygulamanın gerçekte yapmadığı bir şeyi vaat eden ifadeleri tüm metadata'dan kaldır.",
-        "Eğlence/şaka uygulamasıysa bunu isimde ve açıklamada açıkça belirt (ör. \"şaka amaçlıdır\").",
+        "Bir sonraki sürümde uygulamanın gerçekte yapmadığı bir şeyi vaat eden ifadeleri tüm metadata'dan ve uygulama içinden kaldır.",
+        "Eğlence/şaka uygulamasıysa onu öyle yeniden konumla; isimde ve açıklamada açıkça belirt (ör. \"şaka amaçlıdır\").",
+      ],
+      yapma: [
+        "Sadece metindeki kelimeyi silip vaadi uygulama içinde gizlice bırakma — bu 2.3.1 'gizli özellik' olur, daha ağır.",
+        "Apple'a kendiliğinden açıklama yazma.",
       ],
     });
   }
@@ -465,9 +486,10 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         "eder (5.1.1(ix), 5.4, 3.1.5). Bireysel hesapla yayınlamak red ya da kaldırma sebebi; şirket hesabıysan sorun yok.",
       kanit: { terimler: regule, not: "API hesap türünü (bireysel/şirket) vermiyor; bunu sen bilirsin." },
       adimlar: [
-        "Hesabın bireyselse: uygulamayı bir şirket hesabına taşı ya da bu işlevi kaldır.",
-        "Hesabın şirketse: gerekli lisans/izin belgelerini inceleme notuna ekle.",
+        "Önce hesap türüne bak (App Store Connect → Üyelik): şirketse sorun yok, sadece lisans/izin belgelerini hazır tut.",
+        "Bireyselse: uygulamayı bir şirket hesabına transfer et ya da bir sonraki sürümde regüle işlevi uygulamadan çıkar.",
       ],
+      yapma: ["Kategoriyi ya da metni yanlış göstererek regüle alanı gizleme — işlev uygulamada kaldıkça risk sürer."],
     });
   }
 
@@ -487,14 +509,19 @@ function uygulamaKurallari(u: Uygulama): Bulgu[] {
         baslik: "Hazırlanan sürümde uygulamanın adı/kategorisi kökten değişiyor",
         neden:
           "Onaydan sonra uygulamayı bambaşka bir şeye çevirmek Apple'ın 'bait-and-switch' dediği şey (DPLA 11.2(g)); " +
-          "2025'te bu yüzden 59 bin uygulama kaldırıldı. Gerçek bir yeniden markalaşma sorun değil ama Apple'a açıklanmalı.",
+          "2025'te bu yüzden 59 bin uygulama kaldırıldı. Uygulamanın gerçek içeriğiyle uyumlu bir yeniden markalaşma sorun değil.",
         kanit: {
           isimler: isimFarki,
           ...(kategoriFarki ? { kategori: { eski: eskiInfo.kategori, yeni: yeniInfo.kategori } } : {}),
         },
         adimlar: [
-          "Değişiklik gerçek bir yeniden markalaşmaysa inceleme notunda sebebini açıkça yaz.",
-          "Uygulamanın işlevi değişiyorsa ayrı bir uygulama olarak yayınlamayı düşün.",
+          "Gerçek bir yeniden markalaşmaysa, bu sürümdeki yeni özellikleri inceleme notunda olgusal olarak anlat (normal kanal budur).",
+          "İsim/kategori değişikliğini kademeli yap ve uygulamanın gerçek içeriğiyle uyumlu tut.",
+          "Uygulamanın işlevi tamamen değişiyorsa ayrı bir uygulama olarak yayınlamayı düşün.",
+        ],
+        yapma: [
+          "İnceleme sürerken isim ya da kategori değiştirme.",
+          "Onaydan sonra uygulamanın işlevini uzaktan (remote config) değiştirme.",
         ],
       });
     }

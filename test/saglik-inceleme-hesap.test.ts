@@ -32,9 +32,29 @@ describe("inceleme-hesap kuralları", () => {
 
   it("uzun-bekleyen-inceleme", () => {
     const b = kos({ gonderimler: [{ id: "g1", durum: "WAITING_FOR_REVIEW", tarih: "2026-10-05T00:00:00Z" }] });
-    assert.equal(bul(b, "uzun-bekleyen-inceleme:1:g1")?.ciddiyet, "yuksek");
+    const f = bul(b, "uzun-bekleyen-inceleme:1:g1");
+    assert.equal(f?.ciddiyet, "yuksek");
+    // Sessiz düzeltme: Apple'a kendiliğinden yazmaya yönlendirmez, refleksleri 'yapma'da söyler.
+    assert.ok(f?.yapma?.length);
+    assert.ok(!f!.adimlar.join(" ").includes("formuyla durumu sor"));
+    assert.ok(f!.yapma!.some((s) => s.includes("iptal edip yeniden gönderme")));
     const o = kos({ gonderimler: [{ id: "g1", durum: "IN_REVIEW", tarih: "2026-10-10T00:00:00Z" }] });
     assert.equal(bul(o, "uzun-bekleyen-inceleme:1:g1")?.ciddiyet, "orta");
+  });
+
+  it("hiçbir tavsiye Apple'a kendiliğinden yazmaya / itiraza ilk adım olarak yönlendirmez", () => {
+    const b = kos({
+      gonderimler: [{ id: "g1", durum: "WAITING_FOR_REVIEW", tarih: "2026-10-05T00:00:00Z" }],
+      surumler: [
+        { id: "v1", surum: "1", durum: "REJECTED", olusturma: "2026-09-01T00:00:00Z" },
+        { id: "v2", surum: "2", durum: "REJECTED", olusturma: "2026-09-10T00:00:00Z" },
+        { id: "v3", surum: "3", durum: "REJECTED", olusturma: "2026-09-20T00:00:00Z" },
+      ],
+    });
+    for (const x of b) {
+      const adim = x.adimlar.join(" ");
+      assert.ok(!/formuyla|contact\/app-store|soru sor ya da itiraz/.test(adim), `${x.id}: ${adim}`);
+    }
   });
 
   it("apple-kaldirdi yalnızca Apple'ın kaldırması", () => {

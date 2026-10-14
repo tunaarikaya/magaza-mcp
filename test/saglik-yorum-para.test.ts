@@ -54,6 +54,14 @@ describe("yorum & para kuralları", () => {
     assert.equal(bul(kurallar({ yorumlar: kopya(2).map((y) => ({ ...y, takmaAd: "ayni" })) }), "kopya-yorum"), undefined);
   });
 
+  it("sessiz düzeltme: kopya-yorum raporlamaya yönlendirmez, yapma listesi var", () => {
+    const metin = "Best planner app ever, totally changed my life!";
+    const b = bul(kurallar({ yorumlar: [300, 301, 302].map((id) => yorum(id, { metin })) }), "kopya-yorum")!;
+    assert.ok(b.yapma?.length);
+    assert.ok(b.adimlar.every((a) => !/sorun bildir|raporla|itiraz/i.test(a)));
+    assert.ok(b.adimlar.some((a) => a.includes("TAMAMEN kaldır")));
+  });
+
   it("yaniltici-yanit: teşvikli geliştirici yanıtı → yüksek", () => {
     const yorumlar = [yorum(1, { yanit: "Sorry! Please change your rating and get free premium." }), yorum(2, { yanit: "Thanks, fixed in 1.3" })];
     assert.equal(bul(kurallar({ yorumlar }), "yaniltici-yanit")?.ciddiyet, "yuksek");

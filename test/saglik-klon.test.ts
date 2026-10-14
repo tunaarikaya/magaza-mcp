@@ -107,6 +107,11 @@ describe("klon kuralları", () => {
     assert.equal(b.ciddiyet, "orta");
     assert.ok(b.duzeltme?.engel);
     assert.deepEqual(b.duzeltme!.istekler("© 2026 Ornek Ltd"), []);
+    // Sessiz düzeltme: Apple'a açıklama yönlendirmesi yok, hesabın kendi sahibi örnek verilir, "yapma" listesi var.
+    assert.ok(!b.adimlar.some((a) => /inceleme not/i.test(a)));
+    assert.ok(b.adimlar.some((a) => a.includes("© 2026 Ornek Ltd")));
+    assert.ok(b.yapma?.some((y) => /acil sürüm/.test(y)));
+    assert.ok(!/hesap kapat/i.test(b.neden));
 
     yabanci.hedefSurumDuzenlenebilir = true;
     const [d] = kural(uygulamalar, "yabanci-copyright");

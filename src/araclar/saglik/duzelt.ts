@@ -86,11 +86,11 @@ export async function hesapDuzelt(girdi: Record<string, any>): Promise<unknown> 
     }
     const d = b.duzeltme;
     if (!d) {
-      atlanan.push({ id, baslik: b.baslik, durum: "Otomatik düzeltilemez — elle yapılmalı.", adimlar: b.adimlar });
+      atlanan.push({ id, baslik: b.baslik, durum: "Otomatik düzeltilemez — elle yapılmalı.", adimlar: b.adimlar, yapma: b.yapma });
       continue;
     }
     if (d.engel) {
-      atlanan.push({ id, baslik: b.baslik, durum: d.engel, adimlar: b.adimlar });
+      atlanan.push({ id, baslik: b.baslik, durum: d.engel, adimlar: b.adimlar, yapma: b.yapma });
       continue;
     }
     const deger = degerler[id]?.trim();

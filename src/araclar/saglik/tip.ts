@@ -61,6 +61,14 @@ export const KURALLAR = {
 
 export type KuralId = keyof typeof KURALLAR;
 
+/** Tüm tavsiyelerin uyduğu ilke; çıktıda da kullanıcıya verilir. */
+export const SESSIZ_DUZELTME = [
+  "Sorunu kendi tarafında düzelt (kod, metadata, paywall, ürünler); mümkünse bir sonraki normal güncellemenin içine kat.",
+  "Apple'a kendiliğinden hiçbir şey bildirme: yorum raporlama, App Review'a mesaj, açıklama, itiraf, 'rakip yaptı' iddiası yok. Apple bu sinyallerin çoğunu zaten görüyor; senin mesajın yalnızca dikkat çeker.",
+  "Apple SORARSA (red mesajı, Resolution Center, Pending Termination): kısa, olgusal, dürüst cevap ver; neyi ne zaman düzelttiğini söyle. Asla yalan söyleme, başkasını suçlama.",
+  "Ne zaman neyi düzelttiğini (tarih, sürüm) kendine not et — yalnızca sorulursa kullanmak için.",
+];
+
 /** Bulgu id'si deterministik: aynı veriyle her taramada aynı çıkar; hesap_duzelt buna güvenir. */
 export function bulguId(kural: KuralId, uygulamaId?: string, ek?: string): string {
   return [kural, uygulamaId ?? "hesap", ek].filter(Boolean).join(":");
@@ -88,8 +96,10 @@ export type Bulgu = {
   neden: string;
   /** Kısa kanıt — tetikleyen kelimeler, ilgili uygulamalar, sayılar. Büyük veri koyma. */
   kanit: unknown;
-  /** Elle çözüm adımları (otomatik düzeltme olsa bile yaz). */
+  /** Elle çözüm adımları (otomatik düzeltme olsa bile yaz). Sessiz düzeltme ilkesine uymalı — bkz. SESSIZ_DUZELTME. */
   adimlar: string[];
+  /** Göze batıran / durumu kötüleştiren refleksler: raporlamak, Apple'a kendiliğinden yazmak, iptal edip yeniden göndermek… */
+  yapma?: string[];
   /** Varsa hesap_duzelt bu bulguyu düzeltebilir. Ağır müdahalelerde (satıştan kaldırma, rol düşürme) KOYMA. */
   duzeltme?: Duzeltme;
 };

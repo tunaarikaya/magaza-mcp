@@ -129,13 +129,17 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         uygulama,
         baslik: `Son 12 ayda ${red} red / çözülmemiş inceleme sorunu var.`,
         neden:
-          "Tekrar tekrar reddedilen hesaplar Apple'da 'ek inceleme'ye alınır, sonraki her gönderim yavaşlar. " +
-          "4.3(b): aynı sorunla tekrar gönderim hesabın programdan çıkarılmasına kadar gidebilir.",
+          "Sık red alan uygulamaların sonraki gönderimleri daha dikkatli ve yavaş incelenebilir. Asıl risk, aynı " +
+          "sorunla tekrar tekrar göndermek (4.3(b)).",
         kanit: { red_sayisi: red },
         adimlar: [
           "App Store Connect → Uygulama → Resolution Center'da her red gerekçesini oku.",
-          "Gerekçeyi gerçekten düzeltmeden tekrar gönderme; düzelttiğin şeyi inceleme notunda açıkça yaz.",
-          "Anlamadığın bir red için App Review'a Resolution Center'dan soru sor ya da itiraz et.",
+          "Gerekçeyi gerçekten düzelt; sonra red mesajına kısa ve olgusal cevap ver (ne değişti) — bu normal akış, göze batmaz.",
+        ],
+        yapma: [
+          "Aynı şeyi değiştirmeden tekrar gönderme.",
+          "İlk refleks olarak App Review Board'a itiraz etme — yalnızca açık bir yanlış anlama varsa ve düzeltmek mümkün değilse.",
+          "Redde Apple'la tartışma, uzun savunma yazma.",
         ],
       });
     }
@@ -154,15 +158,20 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         uygulama,
         baslik: `İnceleme ${gun} gündür bekliyor (normali 1-2 gün).`,
         neden:
-          "Bu kadar uzun bekleme genelde hesabın genişletilmiş incelemeye alındığını gösterir. Apple'ın mesajı: " +
-          "\"We need additional time to evaluate your submission and Apple Developer Program account.\" " +
-          "Nominal süre 7 iş günü, raporlarda haftalar sürüyor; hesap düzeyinde bir şüpheye işaret edebilir.",
+          "Bu bir hüküm değil, sinyal: uzun bekleme bazen hesabın genişletilmiş incelemeye alındığını gösterir. " +
+          "Apple'ın o durumdaki mesajı: \"We need additional time to evaluate your submission and Apple Developer " +
+          "Program account.\" Nominal süre 7 iş günü; çoğu zaman kendiliğinden sonuçlanır.",
         kanit: { gonderim: bekleyen.g.id, durum: bekleyen.g.durum, gonderilme: bekleyen.g.tarih, gun },
         adimlar: [
-          "Gönderimi iptal edip yeniden gönderme — sırayı sıfırlar, süreyi uzatır.",
-          "developer.apple.com/contact/app-store → 'App Review' formuyla durumu sor.",
-          "İnceleme notlarını, demo hesabı ve iletişim bilgilerini eksiksiz yap; Apple'ın sorusuna hızlı yanıt ver.",
-          "Bu süreçte aynı hesaptan başka uygulama gönderme ve yeni hesap açma.",
+          "Bekle; gönderime dokunma.",
+          "Apple bir şey sorarsa (Resolution Center / e-posta) 24 saat içinde kısa ve olgusal cevap ver.",
+          "Bekleme sürerken diğer uygulamalarını normal akışında tut; ani toplu gönderim yapma.",
+          "Hesapta açık risk sinyalleri varsa (bu rapordaki kritik/yüksek bulgular) onları bir sonraki sürümlerde sessizce düzelt.",
+        ],
+        yapma: [
+          "Gönderimi iptal edip yeniden gönderme — sırayı sıfırlar.",
+          "App Review'a 'neden bu kadar uzun' diye form doldurma, şikâyet etme ya da hızlandırma (expedite) isteme — dikkat çeker.",
+          "Yeni hesap açma, uygulamayı başka hesaba taşıma.",
         ],
       });
     }
@@ -180,9 +189,13 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
           "incelemesine girer. Sebep çözülmezse diğer uygulamalarına da sıçrayabilir.",
         kanit: { surumler: u.surumler.filter((s) => s.magazaDurumu === "REMOVED_FROM_SALE").map((s) => s.surum) },
         adimlar: [
-          "Apple'dan gelen kaldırma e-postasını ve Resolution Center'ı kontrol et, sebebini öğren.",
-          "Sebebi düzeltip yeni sürüm gönder ya da App Review Board'a itiraz et.",
-          "Sebebi bilmeden aynı uygulamayı yeni isimle tekrar yükleme — 4.3 spam sayılır.",
+          "Apple'dan gelen kaldırma e-postasını ve Resolution Center'ı oku, gerekçeyi öğren.",
+          "Gerekçeyi düzelt; düzeltilmiş sürümle Resolution Center'dan kısa ve olgusal yanıt ver — Apple zaten işlem yaptığı için burada iletişim meşru.",
+          "App Review Board'a yalnızca gerekçe açıkça yanlışsa başvur.",
+        ],
+        yapma: [
+          "Aynı uygulamayı yeni isimle ya da başka hesaptan yeniden yükleme — 4.3 spam ve bağlantılı hesap sayılır.",
+          "Yeni hesap açma.",
         ],
       });
     }
@@ -205,9 +218,10 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
             "gönderir; güncellenmezse uygulama mağazadan kaldırılır.",
           kanit: { surum: canli.surum, olusturma: canli.olusturma },
           adimlar: [
-            "Güncel Xcode/SDK ile yeni bir build alıp küçük de olsa bir güncelleme yayımla.",
+            "Güncel Xcode/SDK ile yeni bir build alıp küçük de olsa normal bir güncelleme yayımla.",
             "Uygulamayı artık sürdürmeyeceksen kendin satıştan kaldır.",
           ],
+          yapma: ["Apple'ın uyarı e-postasını beklemeden 'güncelleyeceğim' diye Apple'a yazma — güncellemeyi yayımlamak yeter."],
         });
       }
     }
@@ -227,13 +241,13 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
           uygulama,
           baslik: `${Math.floor(enEski)} gündür hiç build yüklenmemiş, hiç yayımlanmamış uygulama kaydı.`,
           neden:
-            "DPLA 3.2(f) uygulama ismini kullanmadan tutmayı ('squatting') açıkça yasaklar. Apple bu kayıtları " +
-            "silebilir ve hesabı isim işgaliyle işaretleyebilir.",
+            "DPLA 3.2(f) uygulama ismini kullanmadan tutmayı ('squatting') yasaklar; Apple böyle kayıtları silebilir.",
           kanit: { ilk_kayit_gun: Math.floor(enEski) },
           adimlar: [
             "Yakında yayımlamayacaksan kaydı App Store Connect'ten sil (Uygulama Bilgileri → Uygulamayı Kaldır).",
-            "Yayımlayacaksan bir build yükleyip incelemeye gönder.",
+            "Yayımlayacaksan bir build yükleyip normal şekilde incelemeye gönder.",
           ],
+          yapma: ["Aynı ismi tutmak için yeni boş kayıtlar açma."],
         });
       }
     }
@@ -252,9 +266,10 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
           "AB'deki tüm mağazalardan kaldırılıyor.",
         kanit: Object.fromEntries(trader.map(([d, ulkeler]) => [d, ulkeler.length])),
         adimlar: [
-          "App Store Connect → İş (Business) → Digital Services Act bölümünden tacir durumunu bildir.",
-          "Tacirsen adres, telefon ve e-postayı doğrulat; doğrulama başarısızsa bilgileri düzeltip yeniden gönder.",
+          "App Store Connect → İş (Business) → Digital Services Act formunu doldur (zorunlu bir form, ek yazışma gerekmez).",
+          "Tacirsen adres, telefon ve e-postayı doğrulat; doğrulama başarısızsa bilgileri düzeltip formu yeniden gönder.",
         ],
+        yapma: ["Formu doldurmak yerine Apple'a e-posta ya da destek talebi açma."],
       });
     }
     // Hiç yayına çıkmamış uygulama her ülkede genel CANNOT_SELL alır — bu normal, engel değil.
@@ -277,8 +292,9 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         ),
         adimlar: [
           "App Store Connect → Fiyatlandırma ve Erişilebilirlik → ülke listesinde uyarı veren ülkelere bak.",
-          "MISSING_RATING / GRN / ICP gibi eksik belgeleri tamamla; içerik kısıtlamalarında o ülkeyi satıştan çıkar.",
+          "MISSING_RATING / GRN / ICP gibi eksik belgeleri ilgili ekrandan tamamla; belgen yoksa o ülkeyi satış listesinden çıkar.",
         ],
+        yapma: ["Belgesi gerektiren ülkede (ör. Çin oyun lisansı) belgesiz satış için Apple'a istisna isteme."],
       });
     }
 
@@ -290,9 +306,10 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         ciddiyet: "dusuk",
         uygulama,
         baslik: "Üçüncü taraf içerik beyanı (Content Rights) boş.",
-        neden: "Beyan olmadan gönderim takılır; yanlış beyan ise ASC'de yanıltıcı yanıt sayılır.",
+        neden: "Beyan olmadan gönderim takılır; doğru yanıtlamak yeterli.",
         kanit: { contentRightsDeclaration: null },
-        adimlar: ["App Store Connect → Uygulama Bilgileri → İçerik Hakları sorusunu doğru yanıtla."],
+        adimlar: ["App Store Connect → Uygulama Bilgileri → İçerik Hakları sorusunu gerçeğe uygun yanıtla."],
+        yapma: ["Emin değilsen 'kullanmıyorum' deme — lisanslı müzik, font, görsel de üçüncü taraf içeriktir."],
         duzeltme: {
           gerekenDeger: "üçüncü taraf içerik kullanıyor musun? evet/hayır",
           degisim: [{ alan: "contentRightsDeclaration", simdi: null, yeni: DEGER }],
@@ -330,9 +347,10 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         neden: "Beyansız build TestFlight'a ve incelemeye gönderilemez; her seferinde elle sorulur.",
         kanit: { buildler: beyansiz.map((b) => b.surum) },
         adimlar: [
-          "Info.plist'e ITSAppUsesNonExemptEncryption ekle (yalnızca HTTPS kullanıyorsan false).",
-          "Mevcut build'ler için App Store Connect → TestFlight'ta beyanı yanıtla.",
+          "Bir sonraki build için Info.plist'e ITSAppUsesNonExemptEncryption ekle (yalnızca HTTPS kullanıyorsan false).",
+          "Mevcut build için App Store Connect → TestFlight'ta beyanı yanıtla.",
         ],
+        yapma: ["Uygulama gerçekten kendi şifrelemesini (VPN, E2E) kullanıyorsa 'hayır' deme."],
         duzeltme: {
           gerekenDeger: "standart dışı şifreleme kullanıyor musun? evet/hayır (çoğu uygulama: hayır — yalnızca HTTPS)",
           degisim: beyansiz.map((b) => ({ alan: `build ${b.surum} usesNonExemptEncryption`, simdi: null, yeni: DEGER })),
@@ -380,13 +398,13 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
           ? "Demo hesap gerekli işaretli ama kullanıcı adı/şifre boş."
           : "Açıklamada giriş/hesap geçiyor ama inceleme için demo hesap verilmemiş.",
         neden:
-          "İnceleyici giriş yapamazsa uygulamayı 2.1 (eksik uygulama) ile reddeder; bu red döngüleri hesabın " +
-          "red geçmişini şişirir.",
+          "İnceleyici giriş yapamazsa uygulamayı 2.1 (eksik uygulama) ile reddeder; gereksiz red geçmişi birikir.",
         kanit: { demo_gerekli: detay?.demoGerekli ?? null, aciklamada_giris: girisVar },
         adimlar: [
           "Çalışan, süresi dolmayan bir demo hesap oluştur (gerekiyorsa örnek veriyle doldur).",
-          "App Store Connect → Sürüm → App Review Bilgileri → 'Oturum açma gerekli' alanına gir.",
+          "Bir sonraki gönderimde App Store Connect → Sürüm → App Review Bilgileri → 'Oturum açma gerekli' alanına gir.",
         ],
+        yapma: ["Süresi dolan, 2FA isteyen ya da boş bir demo hesap verme — red sebebi olur."],
         duzeltme,
       });
     }
@@ -403,12 +421,14 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
           uygulama,
           baslik: not ? `İnceleme notu şablon/çok kısa: "${not}".` : "İnceleme notu boş.",
           neden:
-            "2.3.1(a) yeni özelliklerin inceleme notunda açıkça anlatılmasını ister; genel ifadeler red sebebi. " +
-            "Gizli/anlatılmamış özellik şüphesi bait-and-switch (DPLA 11.2(g)) incelemesine kadar gider.",
+            "2.3.1(a) yeni özelliklerin inceleme notunda anlatılmasını ister; boş not gereksiz soru ve redlere yol açar.",
           kanit: { notlar: not || null },
           adimlar: [
-            "Bu sürümde ne değiştiğini, nasıl test edileceğini ve varsa gerekli donanım/hesabı yaz.",
-            "Ödeme, abonelik ya da uzaktan yapılandırılan özellikler varsa açıkça belirt.",
+            "Bu sürümde ne değiştiğini ve nasıl test edileceğini kısa ve olgusal yaz; gerekiyorsa donanım/hesap bilgisini ekle.",
+            "Ödeme, abonelik ya da uzaktan yapılandırılan özellikler varsa nerede olduklarını belirt.",
+          ],
+          yapma: [
+            "İnceleme notunda geçmiş sorunları, eski ihlalleri ya da 'şunu kaldırdık' açıklamalarını itiraf etme — not yalnızca bu sürümü anlatır.",
           ],
           duzeltme: {
             gerekenDeger: "inceleme notu (yeni özellikleri ve nasıl test edileceğini açıkça yaz)",
@@ -426,8 +446,12 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
 
     // yanlis-beyan
     const beyanUyarisi =
-      "Termination bildirimlerinde bire bir geçen madde: \"providing misleading responses in App Store Connect\". " +
-      "Beyanla metin çelişirse Apple bunu kasıtlı yanıltma sayabilir.";
+      "Beyanla metin çelişirse Apple bunu 'App Store Connect'te yanıltıcı yanıt' sayabilir. Çözümü basit: " +
+      "beyanı bir sonraki sürümde gerçeğe uygun hale getirmek.";
+    const beyanYapma = [
+      "Beyanı düzeltirken Apple'a ayrıca açıklama ya da özür yazma.",
+      "Metindeki kelimeyi silip beyanı yanlış bırakma — sorun kelime değil, beyanın gerçeğe uymaması.",
+    ];
     const markalar = u.icerikHaklari === "DOES_NOT_USE_THIRD_PARTY_CONTENT" ? bulunanlar(metin, MARKALAR) : [];
     if (markalar.length) {
       out.push({
@@ -439,9 +463,10 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         neden: beyanUyarisi,
         kanit: { beyan: u.icerikHaklari, kelimeler: markalar },
         adimlar: [
-          "Bu içeriği lisansla kullanıyorsan İçerik Hakları beyanını 'kullanıyorum' olarak düzelt ve lisansı hazır tut.",
-          "Lisansın yoksa marka/eser adlarını ve ilgili içeriği uygulamadan ve metinlerden çıkar.",
+          "Bu içeriği lisansla kullanıyorsan bir sonraki sürümde İçerik Hakları beyanını 'kullanıyorum' yap; lisansı kendinde sakla.",
+          "Lisansın yoksa marka/eser adlarını ve ilgili içeriği bir sonraki sürümde uygulamadan ve metinlerden çıkar.",
         ],
+        yapma: beyanYapma,
       });
     }
     const sonBuild = [...u.buildler].sort((a, b) => Date.parse(b.yuklenme) - Date.parse(a.yuklenme))[0];
@@ -456,9 +481,10 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         neden: beyanUyarisi + " Şifreleme beyanı ayrıca ABD ihracat mevzuatına tabidir.",
         kanit: { build: sonBuild!.surum, usesNonExemptEncryption: false, kelimeler: sifreKelime },
         adimlar: [
-          "Uygulama kendi şifrelemesini (VPN protokolü, E2E) kullanıyorsa beyanı 'evet' yap ve ihracat belgelerini doldur.",
-          "Yalnızca HTTPS kullanıyorsan metindeki şifreleme vaatlerini gerçeğe uygun hale getir.",
+          "Uygulama kendi şifrelemesini (VPN protokolü, E2E) kullanıyorsa bir sonraki build'de beyanı 'evet' yap ve ihracat formunu doldur.",
+          "Yalnızca HTTPS kullanıyorsan metindeki şifreleme vaatlerini bir sonraki sürümde gerçeğe uygun hale getir.",
         ],
+        yapma: beyanYapma,
       });
     }
     const yas = u.yasBeyani?.ozellikler;
@@ -472,13 +498,14 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         ciddiyet: "yuksek",
         uygulama,
         baslik: "Yaş anketinde kumar yok denmiş ama metinde casino/bahis geçiyor.",
-        neden: beyanUyarisi + " Yanlış yaş derecelendirmesi uygulamanın kaldırılma sebebidir.",
+        neden: beyanUyarisi + " Yaş derecelendirmesi içerikle uyuşmazsa uygulama reddedilebilir ya da kaldırılabilir.",
         kanit: { gambling: yas!.gambling ?? null, gamblingSimulated: yas!.gamblingSimulated ?? null, kelimeler: kumarKelime },
         adimlar: [
           "Simüle kumar varsa yaş anketinde 'Simulated Gambling' sorusunu doğru yanıtla (appstore__yas_derecelendirme).",
           "Gerçek parayla kumar varsa lisans, bölge kısıtı ve organizasyon hesabı gerekir (5.3.3).",
-          "Yoksa bu kelimeleri metinlerden çıkar.",
+          "Uygulamada kumar içeriği hiç yoksa yalnızca yanıltıcı kelimeleri metinden çıkar.",
         ],
+        yapma: beyanYapma,
       });
     }
 
@@ -495,8 +522,9 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
           neden: "31 Ocak 2026'dan beri yeni yaş soruları yanıtlanmadan yeni sürüm gönderilemiyor.",
           kanit: { bos_alanlar: eksik },
           adimlar: [
-            "appstore__yas_derecelendirme aracıyla eksik soruları yanıtla (ya da App Store Connect → Yaş Derecelendirmesi).",
+            "Bir sonraki gönderimden önce appstore__yas_derecelendirme aracıyla eksik soruları yanıtla (ya da App Store Connect → Yaş Derecelendirmesi).",
           ],
+          yapma: ["Soruları hızlıca geçmek için hepsine 'hayır' deme — içerikle uyuşmayan yanıt yanlış beyan sayılır."],
         });
       }
     }
@@ -510,13 +538,14 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
       ciddiyet: "yuksek",
       baslik: `Hesap genelinde son 12 ayda ${hesapRed} red var.`,
       neden:
-        "Hesap düzeyinde yüksek red oranı, Apple'ın tüm gönderimlerini daha sıkı ve yavaş incelemesine yol açar; " +
-        "4.3(b) tekrar eden ihlalleri programdan çıkarma sebebi sayar.",
+        "Hesap düzeyinde yüksek red oranı, gönderimlerinin daha sıkı ve yavaş incelenmesine yol açabilir; " +
+        "aynı ihlalin tekrarı 4.3(b) kapsamında ciddiye alınır.",
       kanit: { toplam_red: hesapRed },
       adimlar: [
         "En çok red alan uygulamalardan başla; ortak red gerekçesini bul (metadata, 4.3, 2.1…).",
-        "Bir süre yeni uygulama göndermeyi bırakıp mevcutları temize çek.",
+        "Bir süre yeni uygulama göndermeyi bırakıp mevcutları sessizce temize çek.",
       ],
+      yapma: ["Red alınan uygulamayı başka isim/hesapla yeniden gönderme.", "Apple'a toplu açıklama ya da şikâyet yazma."],
     });
   }
 
@@ -535,6 +564,7 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
         "App Store Connect → Kullanıcılar ve Erişim'de her Admin'i gözden geçir.",
         "Gerekmeyenleri App Manager / Developer rolüne düşür, ayrılanları kaldır.",
       ],
+      yapma: ["Hesap şifresini ya da Hesap Sahibi girişini başkalarıyla paylaşma — gereken kişiye kendi kullanıcısını aç."],
     });
   }
   const adminDaveti = v.davetler.filter(
@@ -549,6 +579,7 @@ export function incelemeHesapKurallari(v: Veri): Bulgu[] {
       neden: "Kabul edilirse davetli tüm hesaba yetkili olur; tanımadığın bir davet hesap ele geçirme girişimi olabilir.",
       kanit: { davet_sayisi: adminDaveti.length },
       adimlar: ["App Store Connect → Kullanıcılar ve Erişim → bekleyen davetleri kontrol et, tanımadıklarını iptal et."],
+      yapma: ["Tanımadığın davetin bağlantısına tıklama."],
     });
   }
 

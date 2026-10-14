@@ -32,6 +32,19 @@ function tesvikMi(yanit: string): boolean {
   return TESVIK.some((t) => n.includes(t)) || (ODUL.some((t) => n.includes(t)) && PUAN_BAGLAMI.some((t) => n.includes(t)));
 }
 
+/** Sahte/teşvikli yorum sinyallerinde ortak sessiz düzeltme adımları. */
+const TESVIK_ADIMLAR = [
+  "Puan karşılığı ödül / deneme / kilit açma veren bir akışın olduysa kodu bir sonraki sürümde TAMAMEN kaldır — uzaktan (remote config) kapatmak yetmez, binary'de duran kapalı özellik 2.3.1 'gizli özellik' sayılabilir.",
+  "Kaldırdığın tarihi ve sürümü kendine not et — yalnızca Apple sorarsa kullanmak için.",
+  "Bundan sonra puanı yalnızca SKStoreReviewController ile iste, hiçbir ödüle bağlama.",
+  "Apple sorarsa kısa ve dürüst cevap ver: ne vardı, ne zaman kaldırıldı.",
+];
+const TESVIK_YAPMA = [
+  "Bu yorumları 'Sorun bildir' ile raporlama ya da 'rakip/bot bastı' deme — Apple zaten görüyor; o yorumların bir kısmı kendi teşvik akışından geldiyse bu yanlış beyan olur ve durumu ağırlaştırır.",
+  "Yeni yorum kampanyası, yorum değişim grubu, ödüllü puan isteme.",
+  "Apple'a kendiliğinden açıklama ya da itiraf yazma.",
+];
+
 const kisalt = (s: string) => (s.length > 120 ? s.slice(0, 117) + "…" : s);
 const yorumMetni = (y: Yorum) => [y.baslik, y.metin].filter(Boolean).join(" — ");
 const uyg = (u: Uygulama) => ({ id: u.id, ad: u.ad });
@@ -51,9 +64,9 @@ function sikayetYorum(u: Uygulama): Bulgu[] {
       uygulama: uyg(u),
       baslik: `Son ${u.yorumlar.length} yorumun ${eslesen.length} tanesi dolandırıcılık / iade / ücret şikâyeti`,
       neden:
-        "Apple şikâyet ve iade talebi yoğunluğunu izler; 5.6.4'e göre aşırı şikâyet ve iade hesabın kapatılma sebebidir." +
+        "Apple şikâyet ve iade yoğunluğunu izler (5.6.4); bu oran yükselirse uygulama ve hesap incelemeye girebilir." +
         (abonelik * 2 >= eslesen.length
-          ? " Şikâyetlerin çoğu iptal edememe / deneme sonrası habersiz ücret üzerine — bu 3.1.2 abonelik şeffaflığı ihlali olarak okunur ve 'bait-and-switch' sayılabilir."
+          ? " Şikâyetlerin çoğu iptal edememe / deneme sonrası ücret üzerine — Apple bunu abonelik şeffaflığı (3.1.2) sorunu olarak okur."
           : ""),
       kanit: {
         sayi: eslesen.length,
@@ -62,9 +75,14 @@ function sikayetYorum(u: Uygulama): Bulgu[] {
         ornekler: eslesen.slice(0, 3).map((y) => kisalt(yorumMetni(y))),
       },
       adimlar: [
-        `Yanıtsız ${yanitsiz} şikâyeti appstore__yorum_yanitla ile yanıtla; iadeyi nasıl isteyeceklerini (reportaproblem.apple.com) anlat, yanıltıcı söz verme.`,
-        "Paywall'da fiyatı, deneme süresini ve deneme bitince ne kadar ücret alınacağını açıkça yaz; iptal yolunu (Ayarlar → Abonelikler) göster.",
-        "Şikâyetlerdeki ortak sebebi (çalışmayan özellik, kafa karıştıran fiyat) bir sonraki sürümde düzelt.",
+        `Yanıtsız ${yanitsiz} şikâyeti appstore__yorum_yanitla ile tek tek, sakin ve yardımcı bir dille yanıtla; iadenin reportaproblem.apple.com'dan istendiğini göster, söz verme.`,
+        "Bir sonraki güncellemede paywall'da fiyatı, deneme süresini ve deneme bitince ne kadar ücret alınacağını açıkça yaz; iptal yolunu (Ayarlar → Abonelikler) göster.",
+        "Şikâyetlerdeki ortak sebebi (çalışmayan özellik, kafa karıştıran fiyat) aynı güncellemede düzelt.",
+      ],
+      yapma: [
+        "Şikâyetçiye 'puanını değiştir' deme, karşılığında premium/hediye teklif etme.",
+        "Kopyala-yapıştır aynı yanıtı yüzlerce yoruma basma.",
+        "Kötü yorumları raporlayarak kaldırtmaya çalışma.",
       ],
     },
   ];
@@ -99,16 +117,15 @@ function yildizPatlamasi(u: Uygulama): Bulgu[] {
         `${patlama.length} günde olağandışı 5 yıldız yığılması (en yoğun: ` +
         [...patlama].sort((a, b) => b.sayi - a.sayi).slice(0, 2).map((p) => `${p.gun}: ${p.sayi}`).join(", ") + ")",
       neden:
-        "Apple ani puan patlamalarını satın alınmış / teşvikli yorum sayar (5.6.3, DPLA 3.2(f)); 2025'te 195 milyon sahte puanı engelledi. " +
-        "Kanıtlanırsa yorumlar silinir, hesap 'Pending Termination' alabilir. Bu organik bir viral ya da lansman da olabilir; " +
-        "ödüllü/teşvikli yorum kampanyası yaptıysan risklidir.",
+        "Apple ani puan patlamalarını otomatik izler ve teşvikli / satın alınmış yorum işareti sayar (5.6.3, DPLA 3.2(f)); " +
+        "2025'te 195 milyon sahte puanı engelledi. Kim yazdıysa yazsın, sinyal senin uygulamanda görünür. " +
+        "Organik bir viral ya da lansman da olabilir; ödüllü puan akışı ya da yorum kampanyası varsa risklidir.",
       kanit: { gunler: patlama, gunluk_medyan: m },
       adimlar: [
-        "O tarihte reklam, kampanya ya da influencer paylaşımı var mıydı kontrol et.",
-        "Yorum satın aldıysan, yorum değişimi gruplarına katıldıysan ya da puan karşılığı ödül verdiysen hemen bırak.",
-        "Puan istemeyi yalnızca SKStoreReviewController ile yap; ödül, hediye ya da kilit açma karşılığı puan isteme.",
-        "Patlama bir kampanya / basın haberinden geldiyse bunu bir yere not et — itirazda kanıt olur.",
+        "O tarihte reklam, kampanya ya da influencer paylaşımı var mıydı kendin kontrol et; organikse yapacak bir şey yok.",
+        ...TESVIK_ADIMLAR,
       ],
+      yapma: TESVIK_YAPMA,
     },
   ];
 }
@@ -146,13 +163,12 @@ function kopyaYorum(u: Uygulama): Bulgu[] {
       uygulama: uyg(u),
       baslik: `Farklı kullanıcılardan aynı/çok benzer yorum metinleri (${kopyalar.length} grup)`,
       neden:
-        "Aynı metnin farklı hesaplardan gelmesi sahte yorumun en net izidir. Apple bunu 5.6.1 ve DPLA 3.2(f) ('sahte yorum göndermek') " +
-        "kapsamında doğrudan hesap kapatma sebebi sayar.",
+        "Aynı metnin farklı hesaplardan gelmesi Apple'ın sahte yorum tespitinin en net yakaladığı izdir; 5.6.1 ve DPLA 3.2(f) " +
+        "('sahte yorum göndermek') kapsamındadır ve hesap kapatma bildirimlerinde bire bir geçer. Kim yazdıysa yazsın, sinyal " +
+        "senin uygulamanda görünür. Bu yorumları sen silemezsin; Apple gerekirse kendisi temizler.",
       kanit: kopyalar.slice(0, 3).map((g) => ({ ornek: kisalt(g.ornek), adet: g.adlar.size, takma_adlar: [...g.adlar].slice(0, 5) })),
-      adimlar: [
-        "Yorum satın aldıysan ya da tanıdıklarına hazır metin dağıttıysan hemen durdur; bu yorumları sen silemezsin, Apple siler.",
-        "Rakibin sana sahte yorum bıraktığından şüpheleniyorsan App Store Connect → Yorumlar → 'Sorun bildir' ile Apple'a raporla.",
-      ],
+      adimlar: TESVIK_ADIMLAR,
+      yapma: TESVIK_YAPMA,
     },
   ];
 }
@@ -172,8 +188,12 @@ function yanilticiYanit(u: Uygulama): Bulgu[] {
         "'yanıltıcı müşteri desteği yanıtları'nı ayrıca sayıyor.",
       kanit: eslesen.slice(0, 3).map((y) => kisalt(y.yanit!)),
       adimlar: [
-        "Bu yanıtları appstore__yorum_yanitla ile düzenle: teşviki ve puan değiştirme isteğini çıkar, yalnızca sorunu çözmeye odaklan.",
-        "Destek ekibine puan karşılığı ödül teklif etmenin yasak olduğunu bildir.",
+        "O yanıtları düzenle (yanıt düzenlenebilir, appstore__yorum_yanitla ile üzerine yaz) — ödül / puan değişimi ifadesini çıkar, yalnızca sorunu çözmeye odaklan.",
+        "Destek ekibine de puan karşılığı ödül teklif etmemesini söyle.",
+      ],
+      yapma: [
+        "Yanıtı silip aynı teklifi DM / e-posta ile yapma.",
+        "Apple'a kendiliğinden açıklama yazma; yanıtı düzeltmek yeterli.",
       ],
     },
   ];
@@ -192,12 +212,18 @@ function iadeOrani(v: Veri, u: Uygulama): Bulgu[] {
       uygulama: uyg(u),
       baslik: `${v.satis!.donem} döneminde iade oranı ${yuzde(oran)} (${s.iade}/${s.birim})`,
       neden:
-        "5.6.4 'aşırı oranda iade talebi'ni açıkça hesap kapatma sebebi sayar. Yüksek iade, kullanıcıların yanıltıldığını düşündüğünü gösterir.",
+        oran >= 0.05
+          ? "5.6.4 'aşırı oranda iade talebi'ni hesap kapatma sebepleri arasında sayar. Yüksek iade, kullanıcıların yanıltıldığını düşündüğünü gösterir."
+          : "İade oranı normalin üstünde (5.6.4); kullanıcıların bir kısmı ne aldığını satın almadan önce tam anlamıyor olabilir.",
       kanit: { donem: v.satis!.donem, birim: s.birim, iade: s.iade, oran: yuzde(oran) },
       adimlar: [
-        "Paywall'daki fiyat / deneme / yenileme metnini netleştir; kullanıcı ne ödeyeceğini satın almadan önce görmeli.",
-        "İade yorumlarını appstore__hesap_sagligi'nın sikayet-yorum bulgusuyla birlikte incele; ortak sebebi düzelt.",
+        "Bir sonraki güncellemede paywall'daki fiyat / deneme / yenileme metnini netleştir; kullanıcı ne ödeyeceğini satın almadan önce görmeli.",
+        "Şikâyet yorumlarındaki ortak sebebi bul ve aynı güncellemede düzelt.",
         "Reklamlarında ve ekran görüntülerinde uygulamada olmayan özellik vaat etme.",
+      ],
+      yapma: [
+        "İadeleri engellemeye ya da kullanıcıyı iade istememeye ikna etmeye çalışma.",
+        "Apple'a yazıp iadeleri açıklamaya çalışma; düzeltme paywall'da yapılır.",
       ],
     },
   ];
@@ -217,11 +243,15 @@ function indirmeYok(v: Veri, u: Uygulama): Bulgu[] {
       baslik: `Son 12 ayda yalnızca ${birim} indirme`,
       neden:
         "Apple 'App Store Improvements' sürecinde 12 ay boyunca neredeyse hiç indirilmeyen uygulamalara bildirim gönderir; 90 gün içinde " +
-        "güncellenmezse uygulama kaldırılır. Çok sayıda ölü uygulama hesabı da 'spam' görüntüsüne iter.",
+        "güncellenmezse uygulamayı kaldırır. Bu bir ceza değil, bakım temizliği — ama ölü uygulama birikmesi hesaba iyi görünmez.",
       kanit: { yillik_birim: birim },
       adimlar: [
-        "Uygulamayı yaşatacaksan güncel SDK ile yeni sürüm gönder.",
-        "Yaşatmayacaksan App Store Connect → Fiyatlandırma ve Kullanılabilirlik'ten kendin satıştan kaldır (araç bunu yapmaz).",
+        "Yaşatacaksan güncel SDK ile normal bir güncelleme gönder.",
+        "Yaşatmayacaksan Apple'ın bildirimini beklemeden App Store Connect → Fiyatlandırma ve Kullanılabilirlik'ten kendin satıştan kaldır (araç bunu yapmaz).",
+      ],
+      yapma: [
+        "Bildirim gelirse Apple'a yazıp 'kaldırmayın' deme; ya güncelle ya kaldırılmasına izin ver.",
+        "Sırf indirme göstermek için sahte indirme / yorum alma.",
       ],
     },
   ];
@@ -262,13 +292,18 @@ function fiyatAnomalisi(u: Uygulama): Bulgu[] {
       uygulama: uyg(u),
       baslik: "Abonelik fiyatlarında mantıksız / yanıltıcı görünen yapı",
       neden:
-        "Apple 'mantıksız derecede yüksek fiyatları' reddeder (3.1.1) ve pahalı haftalık planları, kullanıcıyı yanlışlıkla pahalı plana " +
-        "iten 'bait-and-switch' örüntüsü olarak inceler (3.1.2(a)). Bu tür planlar iade ve şikâyetin de ana kaynağıdır.",
+        ciddiyet === "yuksek"
+          ? "Apple 'mantıksız derecede yüksek fiyatları' reddeder (3.1.1) ve kullanıcıyı pahalı plana iten yapıyı 'bait-and-switch' olarak inceler (3.1.2(a)). Bu planlar iade ve şikâyetin de ana kaynağıdır."
+          : "Pahalı haftalık planlar inceleme sırasında red sebebi olabilir (3.1.1) ve iade / şikâyetin sık kaynağıdır.",
       kanit: sebepler,
       adimlar: [
         "Haftalık planı aylık karşılığından belirgin ucuz tut ya da kaldır; uzun plan her zaman birim başına daha ucuz olmalı.",
-        "Paywall'da varsayılan seçili planın fiyatını ve periyodunu en büyük yazıyla göster.",
-        "Fiyatı appstore__fiyat_analizi / appstore__abonelik_fiyat_ayarla ile yeniden ayarla.",
+        "Fiyatı appstore__fiyat_analizi / appstore__abonelik_fiyat_ayarla ile sessizce yeniden ayarla — fiyat değişikliği inceleme gerektirmez.",
+        "Bir sonraki güncellemede paywall'da varsayılan seçili planın fiyatını ve periyodunu en büyük yazıyla göster.",
+      ],
+      yapma: [
+        "Paywall'da haftalık fiyatı küçük yazıp 'günlük sadece X' gibi bölünmüş fiyatı öne çıkarma.",
+        "Apple'a fiyatı açıklayan mesaj yazma; düzelt, yeter.",
       ],
     },
   ];
@@ -286,13 +321,16 @@ function iapSorunlu(u: Uygulama): Bulgu[] {
       uygulama: uyg(u),
       baslik: `${agir.length + eksik.length} uygulama içi ürün reddedilmiş ya da eksik`,
       neden:
-        "Reddedilmiş ya da eksik IAP'ler sürüm gönderimini takar ve tekrarlayan redlere yol açar; tekrarlayan red hesabın inceleme " +
-        "geçmişini kötüleştirir ve sonraki incelemeleri uzatır.",
+        "Reddedilmiş ya da eksik IAP'ler sürüm gönderimini takar; eksikle gönderilen sürüm reddedilir ve red geçmişi sonraki incelemeleri yavaşlatır.",
       kanit: [...agir, ...eksik].map((p) => ({ ad: p.ad, tur: p.tur, durum: p.durum })),
       adimlar: [
         "Her ürüne inceleme ekran görüntüsü (satın alma ekranı) ve tüm dillerde ad + açıklama ekle.",
-        "Review note'ta ürünün uygulamada nerede bulunduğunu adım adım yaz.",
-        "Reddedilen ürünün App Store Connect'teki mesajını oku, düzeltip ürünü bir sonraki sürümle birlikte yeniden gönder.",
+        "Ürünün uygulamada nerede bulunduğunu inceleme notuna adım adım yaz.",
+        "Reddedilen ürünün App Store Connect'teki mesajını oku, düzelt ve ürünü bir sonraki normal sürümle birlikte gönder.",
+      ],
+      yapma: [
+        "Ürünleri eksik haliyle sürüme ekleyip 'bakalım geçer mi' diye gönderme.",
+        "Red mesajını düzeltmeden aynı ürünü tekrar gönderme.",
       ],
     },
   ];

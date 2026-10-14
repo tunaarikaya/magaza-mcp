@@ -42,10 +42,22 @@ const SPAM_SONUCU =
   "DPLA 3.2(f) de birbirinin benzeri uygulamalarla mağazayı doldurmayı yasaklıyor. Önce red gelir, " +
   "tekrarlanırsa uygulamalar kaldırılır ve hesap kapatılabilir.";
 
+const SPAM_HAFIF =
+  "Tek başına genelde red ya da daha uzun inceleme getirir; benzer başka sinyallerle birleşirse 4.3 spam değerlendirmesine girer.";
+
+const spam = (c: Ciddiyet) => (c === "orta" || c === "dusuk" ? SPAM_HAFIF : SPAM_SONUCU);
+
 const BIRLESTIR = [
   "Uygulamalar gerçekten aynı işi yapıyorsa tek uygulamada birleştir; farklı içerikleri uygulama içi seçenek ya da IAP yap.",
-  "Birleştirdikten sonra fazlalıkları App Store Connect → Fiyat ve Bulunabilirlik'ten satıştan kaldır (bunu elle yap, araç yapmaz).",
+  "Fazlalıkları Apple'dan önce kendin satıştan kaldır: App Store Connect → Fiyat ve Bulunabilirlik (araç bunu yapmaz).",
 ];
+
+const KLON_YAPMA = [
+  "Aynı şablondan yeni uygulama yüklemeye devam etme.",
+  "Farklılaştırmak için hepsini aynı gün yeniden gönderme; sırayla, normal güncellemelerle yap.",
+];
+
+const TEKRAR_YUKLEME = "Kaldırdığın uygulamayı başka bir hesaptan yeniden yükleme — bağlantılı hesap sayılır.";
 
 // ─── klon-ekran-goruntusu ────────────────────────────────────────────────
 
@@ -64,9 +76,10 @@ function ekranGoruntusu(v: Veri): Bulgu[] {
         SPAM_SONUCU,
       kanit: { uygulamalar: adlar(g), ortak_ekran_goruntusu: [...sayac.values()].filter((n) => n > 1).length },
       adimlar: [
-        "Her uygulamaya kendi gerçek ekranlarını gösteren özgün ekran görüntüleri hazırla ve yeni sürümle yükle.",
+        "Bir sonraki normal güncellemelerinde her uygulamaya kendi gerçek ekranlarını gösteren özgün ekran görüntüleri yükle.",
         ...BIRLESTIR,
       ],
+      yapma: [...KLON_YAPMA, TEKRAR_YUKLEME],
     };
   });
 }
@@ -94,10 +107,11 @@ function isimKlonu(v: Veri): Bulgu[] {
       "yayınladığını söyler. " + SPAM_SONUCU,
     kanit: { uygulamalar: adlar(g) },
     adimlar: [
-      "Varyantları (ücretsiz/pro, tema, dil) tek uygulamada topla; ücretli kısmı IAP ya da abonelik yap.",
-      "Gerçekten farklı uygulamalarsa her birine işlevini anlatan özgün bir isim ver.",
+      "Gerçekten farklı uygulamalarsa bir sonraki güncellemede her birine işlevini anlatan özgün bir isim ver.",
+      "Varyantsa (ücretsiz/pro, tema, dil) tek uygulamada topla; ücretli kısmı IAP ya da abonelik yap.",
       ...BIRLESTIR.slice(1),
     ],
+    yapma: [...KLON_YAPMA, "Yeni bir 'Pro' / 'Lite' varyantını ayrı uygulama olarak açma."],
   }));
 }
 
@@ -134,9 +148,10 @@ function aciklamaKlonu(v: Veri): Bulgu[] {
     neden: "Aynı açıklamayı birden çok uygulamada kullanmak, Apple'ın şablonla üretilmiş kopya uygulama arayan kontrolüne doğrudan takılır. " + SPAM_SONUCU,
     kanit: { uygulamalar: adlar(g) },
     adimlar: [
-      "Her uygulamanın açıklamasını o uygulamanın kendi özelliklerini anlatacak şekilde baştan yaz.",
+      "Bir sonraki normal güncellemelerde her uygulamanın açıklamasını kendi özelliklerini anlatacak şekilde baştan yaz.",
       ...BIRLESTIR,
     ],
+    yapma: KLON_YAPMA,
   }));
 
   const sablon: Bulgu[] = v.uygulamalar.flatMap((u) => {
@@ -156,9 +171,10 @@ function aciklamaKlonu(v: Veri): Bulgu[] {
         "yer tutucular ('[app name]', 'lorem ipsum') veya üreteç adı bunun en açık izidir; ayrıca 2.1 eksik içerik reddi getirir.",
       kanit: { eslesen },
       adimlar: [
-        "Açıklama ve isimdeki yer tutucuları ve üreteç adlarını temizle.",
-        "Uygulama bir üreteçle yapıldıysa Apple'ın 4.2.6 istisnasına (üretecin kendi hesabından, müşterinin adına yayın) uyup uymadığını kontrol et.",
+        "Bir sonraki güncellemede açıklama ve isimdeki yer tutucuları ve üreteç adlarını temizle.",
+        "Uygulama bir üreteçle yapıldıysa 4.2.6 istisnasına (üretecin kendi hesabından, müşterinin adına yayın) uyup uymadığını kendin kontrol et.",
       ],
+      yapma: ["Aynı üreteçle yeni uygulama açmaya devam etme."],
     }];
   });
 
@@ -175,20 +191,27 @@ function siraliBundle(v: Veri): Bulgu[] {
     const kok = b.replace(/\d+$/, "").replace(/[._-]+$/, "");
     kokler.set(kok, [...(kokler.get(kok) ?? []), u]);
   }
-  return [...kokler].filter(([, g]) => g.length >= 3).map(([kok, g]) => ({
-    id: bulguId("sirali-bundle", undefined, kok),
-    kural: "sirali-bundle",
-    ciddiyet: g.length >= 5 ? "yuksek" : "orta",
-    baslik: `${g.length} uygulamanın bundle id'si sıralı (${kok}…)`,
-    neden:
-      "app1, app2, app3 diye giden bundle id'ler aynı projeden çoğaltılmış uygulamaların tipik izidir; Apple'ın spam " +
-      "taraması benzer metadata ile birlikte bunu da değerlendirir. " + SPAM_SONUCU,
-    kanit: { uygulamalar: g.map((u) => `${u.ad} (${u.bundleId})`) },
-    adimlar: [
-      "Bundle id yayından sonra değişmez; asıl önemli olan bu uygulamaların içerik ve metadata olarak gerçekten farklı olması.",
-      ...BIRLESTIR,
-    ],
-  }));
+  return [...kokler].filter(([, g]) => g.length >= 3).map(([kok, g]) => {
+    const ciddiyet: Ciddiyet = g.length >= 5 ? "yuksek" : "orta";
+    return {
+      id: bulguId("sirali-bundle", undefined, kok),
+      kural: "sirali-bundle",
+      ciddiyet,
+      baslik: `${g.length} uygulamanın bundle id'si sıralı (${kok}…)`,
+      neden:
+        "app1, app2, app3 diye giden bundle id'ler aynı projeden çoğaltılmış uygulamaların tipik izidir; Apple'ın spam " +
+        "taraması benzer metadata ile birlikte bunu da değerlendirir. " + spam(ciddiyet),
+      kanit: { uygulamalar: g.map((u) => `${u.ad} (${u.bundleId})`) },
+      adimlar: [
+        "Bundle id yayından sonra değişmez, dert etme; önemli olan uygulamaların içerik ve metadata olarak gerçekten farklı olması.",
+        ...BIRLESTIR,
+      ],
+      yapma: [
+        "Aynı projeden yeni bir bundle id ile bir kopya daha açma.",
+        "Bundle id'yi değiştirmek için uygulamayı silip yeniden yükleme.",
+      ],
+    };
+  });
 }
 
 // ─── doymus-kategori ─────────────────────────────────────────────────────
@@ -229,18 +252,27 @@ function doymusKategori(v: Veri): Bulgu[] {
     }
   }
   // Tek uygulama doymuş kategoride olabilir; risk aynı temada birden çok uygulama yayınlamakta (4.3(b) "tekrar eden gönderim").
-  return [...eslesme].filter(([, e]) => e.uygulamalar.length >= 2).map(([tema, { uygulamalar: g, terimler }]) => ({
-    id: bulguId("doymus-kategori", undefined, tema),
-    kural: "doymus-kategori",
-    ciddiyet: g.length >= 4 ? "yuksek" : "orta",
-    baslik: `${g.length} uygulama aynı doymuş kategoride: ${TEMALAR[tema].ad}`,
-    neden:
-      "Apple 4.3(b)'de fener, osuruk/geğirme, fal, flört, içki oyunu ve Kama Sutra gibi kategorilerin zaten doymuş " +
-      "olduğunu, yüksek kaliteli ve özgün bir deneyim sunmadıkça reddedileceğini yazar; bu kategorilerde tekrar eden " +
-      "gönderimlerin Developer Program'dan çıkarılmaya götürebileceğini de ekler.",
-    kanit: { tema: TEMALAR[tema].ad, uygulamalar: adlar(g), eslesen: [...terimler] },
-    adimlar: ["Aynı temadaki uygulamaları tek, daha kapsamlı bir uygulamada birleştir.", ...BIRLESTIR.slice(1)],
-  }));
+  return [...eslesme].filter(([, e]) => e.uygulamalar.length >= 2).map(([tema, { uygulamalar: g, terimler }]) => {
+    const ciddiyet: Ciddiyet = g.length >= 4 ? "yuksek" : "orta";
+    return {
+      id: bulguId("doymus-kategori", undefined, tema),
+      kural: "doymus-kategori",
+      ciddiyet,
+      baslik: `${g.length} uygulama aynı doymuş kategoride: ${TEMALAR[tema].ad}`,
+      neden:
+        "Apple 4.3(b)'de fener, osuruk/geğirme, fal, flört, içki oyunu ve Kama Sutra gibi kategorilerin zaten doymuş " +
+        "olduğunu, yüksek kaliteli ve özgün bir deneyim sunmadıkça reddedileceğini yazar." +
+        (ciddiyet === "yuksek"
+          ? " Bu kategorilerde tekrar eden gönderimlerin Developer Program'dan çıkarılmaya götürebileceğini de ekler."
+          : " Aynı temada uygulama sayısı arttıkça red ve uzun inceleme ihtimali artar."),
+      kanit: { tema: TEMALAR[tema].ad, uygulamalar: adlar(g), eslesen: [...terimler] },
+      adimlar: [
+        "Aynı temadaki uygulamaları zamanla tek, daha kapsamlı bir uygulamada birleştir.",
+        ...BIRLESTIR.slice(1),
+      ],
+      yapma: ["Bu temada yeni uygulama açmaya devam etme.", TEKRAR_YUKLEME],
+    };
+  });
 }
 
 // ─── yabanci-copyright ───────────────────────────────────────────────────
@@ -298,6 +330,7 @@ function yabanciCopyright(v: Veri): Bulgu[] {
   if (gruplar.length >= 2) {
     const sirali = gruplar.sort((a, b) => b.length - a.length || a[0].s.localeCompare(b[0].s));
     const hesabin = sirali[0][0].s;
+    const ornek = guncelCopyright(sirali[0][0].u);
     for (const grup of sirali.slice(1)) {
       for (const { u, s } of grup) {
         const hedef = u.hedefSurumId;
@@ -313,17 +346,20 @@ function yabanciCopyright(v: Veri): Bulgu[] {
           baslik: `Copyright hesabın geri kalanından farklı bir sahip gösteriyor: "${guncelCopyright(u)}"`,
           neden:
             "Hesaptaki uygulamaların copyright sahipleri farklı (uygulamanın kendi adı sayılmadı). Tek başına zayıf bir " +
-            "sinyal, ama satın alınmış ya da kopyalanmış kaynak kodun veya hesabın başkalarına kiralandığının tipik izidir. " +
-            "Apple 5.2.1 (başkasının fikri mülkiyeti) ve 5.6.2 (doğru geliştirici kimliği) kapsamında red, uygulama " +
-            "kaldırma ve hesap incelemesi uygulayabilir.",
+            "sinyal; Apple'a kodun satın alındığı ya da hesabın başkası adına kullanıldığı izlenimini verebilir " +
+            "(5.2.1 fikri mülkiyet, 5.6.2 geliştirici kimliği). Tek ve tutarlı bir sahip bu soruyu baştan kaldırır.",
           kanit: { bu_uygulamadaki: guncelCopyright(u), sahip: s, hesabin_cogunlugu: hesabin, farkli_sahip_sayisi: gruplar.length },
           adimlar: [
-            "Copyright alanını kendi adın ya da şirketinle güncelle (ör. © 2026 Adın Soyadın).",
-            "Kod satın alındıysa lisansın yayın hakkı verdiğini belgele; gerekirse inceleme notlarında açıkla.",
-            "Uygulama başkasına aitse onu bu hesapta yayınlama — gerçek sahibine App Store Connect'ten transfer et.",
+            `Bir sonraki normal güncellemede copyright'ı hesabın sahibiyle aynı yap (hesabın geri kalanında: "${ornek}").`,
+            "Kodu satın aldıysan lisans belgesini kendine sakla; yalnızca Apple sorarsa göster.",
+            "Uygulama gerçekten başkasına aitse onu bu hesapta tutma — gerçek sahibine App Store Connect'ten transfer et.",
+          ],
+          yapma: [
+            "Sadece copyright düzeltmek için ayrı acil sürüm gönderme — bir sonraki güncellemeye kat.",
+            "Apple'a sahiplik hakkında kendiliğinden açıklama yazma (inceleme notu dahil).",
           ],
           duzeltme: {
-            gerekenDeger: "copyright metni (ör. © 2026 Adın Soyadın)",
+            gerekenDeger: `copyright metni (ör. hesabın geri kalanındaki "${ornek}")`,
             ...(engel ? { engel } : {}),
             degisim: [{ alan: "copyright", simdi: guncelCopyright(u), yeni: "<senin değerin>" }],
             istekler: (deger) => {
@@ -353,11 +389,15 @@ function yabanciCopyright(v: Veri): Bulgu[] {
       baslik: "Copyright sahibi sürümler arasında değişmiş",
       neden:
         "5.6.2: Apple geliştirici kimliğinin doğru ve tutarlı olmasını ister. Sürümden sürüme değişen sahip, uygulamanın el " +
-        "değiştirdiğini ya da hesabın başkası adına kullanıldığını düşündürür ve hesap incelemesini tetikleyebilir.",
+        "değiştirdiği ya da hesabın başkası adına kullanıldığı izlenimini verebilir.",
       kanit: { surumler: gecmis.map((s) => `${s.surum}: ${s.copyright}`) },
       adimlar: [
-        "Uygulama sana aitse tüm gelecek sürümlerde tek ve doğru sahibi kullan.",
-        "Uygulama el değiştirdiyse Apple'ın resmi uygulama transferini kullan; copyright'ı elle değiştirerek devralma yapma.",
+        "Uygulama sana aitse bir sonraki güncellemeden itibaren tek ve doğru sahibi kullan, sonra bir daha değiştirme.",
+        "Uygulama el değiştirdiyse Apple'ın resmi uygulama transferini kullan.",
+      ],
+      yapma: [
+        "Copyright'ı elle değiştirerek devralma yapma.",
+        "Apple'a sahiplik hakkında kendiliğinden açıklama yazma.",
       ],
     });
   }
@@ -379,18 +419,23 @@ function topluYayin(v: Veri): Bulgu[] {
   const pencere = ilk.slice(en.bas, en.son + 1);
   if (pencere.length < 5) return [];
   const tarih = (t: number) => new Date(t).toISOString().slice(0, 10);
+  const ciddiyet: Ciddiyet = pencere.length >= 10 ? "yuksek" : "orta";
   return [{
     id: bulguId("toplu-yayin", undefined, tarih(pencere[0].t)),
     kural: "toplu-yayin",
-    ciddiyet: pencere.length >= 10 ? "yuksek" : "orta",
+    ciddiyet,
     baslik: `30 gün içinde ${pencere.length} yeni uygulama açılmış`,
     neden:
       "Kısa sürede çok sayıda uygulama göndermek Apple'ın spam ve uygulama fabrikası sinyallerinden biridir; bu hesaplar " +
-      "genelde genişletilmiş incelemeye alınır. " + SPAM_SONUCU,
+      "genelde genişletilmiş incelemeye alınır. " + spam(ciddiyet),
     kanit: { pencere: `${tarih(pencere[0].t)} → ${tarih(pencere[pencere.length - 1].t)}`, uygulamalar: pencere.map((x) => x.u.ad) },
     adimlar: [
-      "Yeni uygulamaları aralıklı gönder; her birinin gerçekten farklı bir ihtiyaca cevap verdiğinden emin ol.",
-      "Benzer fikirleri ayrı uygulamalar yerine tek uygulamanın özellikleri olarak geliştir.",
+      "Bundan sonra yeni uygulamaları aralıklı gönder; her biri gerçekten farklı bir ihtiyaca cevap versin.",
+      "Benzer fikirleri ayrı uygulamalar yerine mevcut bir uygulamanın özellikleri olarak geliştir.",
+    ],
+    yapma: [
+      "Aynı hafta içinde birden çok yeni uygulama gönderme.",
+      "Panikle yayındaki uygulamaları toplu kaldırma; birleştirme gerekiyorsa zamana yay.",
     ],
   }];
 }

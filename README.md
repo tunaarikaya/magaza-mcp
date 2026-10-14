@@ -376,6 +376,12 @@ through `degerler`. If there's no editable version, it tells you instead of
 creating one. Heavy moves — pulling an app from sale, demoting an admin —
 are only explained, never done.
 
+**Quiet fixes.** The advice never pushes you to knock on Apple's door: issues
+are fixed on your side, ideally in your next regular update; reporting
+reviews, messaging App Review unprompted or volunteering explanations is not
+recommended. If Apple asks, answer briefly and honestly. Every finding comes
+with a "don't" list — the reflexes that draw attention.
+
 > **What it can't see.** The API doesn't expose Apple's internal flags,
 > rejection reasons or Resolution Center messages, or links to other
 > accounts (same device, card or freelancer — the most common unexplained
