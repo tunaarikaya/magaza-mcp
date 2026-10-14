@@ -294,15 +294,15 @@ async function urunleriGetir(appId: string, hatalar: Hatalar, bugun: string): Pr
 }
 
 async function bolgeDurumlari(appId: string): Promise<Record<string, string[]>> {
-  const musaitlik: any = await cagir({
-    yontem: "GET",
-    yol: `/v1/apps/${parca(appId, "uygulama_id")}/appAvailabilityV2`,
-    sorgu: { "fields[appAvailabilities]": "availableInNewTerritories" },
-  });
-  const id = musaitlik?.data?.id;
-  if (!id) return {};
   let data: any[];
   try {
+    const musaitlik: any = await cagir({
+      yontem: "GET",
+      yol: `/v1/apps/${parca(appId, "uygulama_id")}/appAvailabilityV2`,
+      sorgu: { "fields[appAvailabilities]": "availableInNewTerritories" },
+    });
+    const id = musaitlik?.data?.id;
+    if (!id) return {};
     ({ data } = await tumunuGetir(
       `/v2/appAvailabilities/${parca(id, "musaitlik_id")}/territoryAvailabilities`,
       { "fields[territoryAvailabilities]": "contentStatuses,territory", include: "territory", "fields[territories]": "currency" },

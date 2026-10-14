@@ -95,7 +95,9 @@ function yildizPatlamasi(u: Uygulama): Bulgu[] {
       kural: "yildiz-patlamasi",
       ciddiyet: "yuksek",
       uygulama: uyg(u),
-      baslik: `Tek günde olağandışı 5 yıldız yığılması (${patlama.map((p) => `${p.gun}: ${p.sayi}`).join(", ")})`,
+      baslik:
+        `${patlama.length} günde olağandışı 5 yıldız yığılması (en yoğun: ` +
+        [...patlama].sort((a, b) => b.sayi - a.sayi).slice(0, 2).map((p) => `${p.gun}: ${p.sayi}`).join(", ") + ")",
       neden:
         "Apple ani puan patlamalarını satın alınmış / teşvikli yorum sayar (5.6.3, DPLA 3.2(f)); 2025'te 195 milyon sahte puanı engelledi. " +
         "Kanıtlanırsa yorumlar silinir, hesap 'Pending Termination' alabilir. Bu organik bir viral ya da lansman da olabilir; " +
