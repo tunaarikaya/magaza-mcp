@@ -409,7 +409,7 @@ These tools only load when both stores are connected.
 </details>
 
 <details>
-<summary><b>App Store Connect — 20 tools</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 21 tools</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -426,6 +426,7 @@ These tools only load when both stores are connected.
 | `appstore__testflight_gruplari` | Shows TestFlight beta groups, how many testers are in each, public invite links, and quotas. |
 | `appstore__metin_guncelle` ✎ | Updates the store text of the version in preparation: release notes, description, keywords, promotional text. |
 | `appstore__satis_raporu` | Downloads the sales/download report as TSV: daily, weekly, monthly, or yearly; sales, pre-order, installs, subscriptions, subscription events, subscribers, and offer code reports. |
+| `appstore__kurallar` | Fetches Apple's App Review Guidelines live on every call — never a baked-in copy, so it can't go stale. With no query, reports which rule numbers changed since the last check (local diff cache). With a query (a rule number or a keyword), returns the current full text of matching rules, for reviewing an app's code against. |
 | `appstore__abonelik_fiyat_ayarla` ✎ | Sets a subscription's price in **every country at once**: give one price (e.g. USA 9.99), Apple's equalization table fills in all ~175 countries and they're written in a single request. Add country-specific prices on top (`{"TUR": "349.99"}`), or change only those countries and leave the rest alone. |
 | `appstore__fiyat_analizi` | Regional pricing suggestion, writes nothing: starts from Apple's equalized price and applies a softened discount based on each country's purchasing power (World Bank). Never raises a price, never cuts more than half, leaves rich countries alone. The output plugs straight into `abonelik_fiyat_ayarla`. |
 | `appstore__iap_fiyat_ayarla` ✎ | Sets a one-time purchase's price from a single base country; Apple fills in the rest. |

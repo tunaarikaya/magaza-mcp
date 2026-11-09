@@ -162,6 +162,6 @@ describe("genel komutlar", () => {
   it("araclar listesi 41 aracı sayar", () => {
     const { kod, cikti } = calistir("araclar");
     assert.equal(kod, 0);
-    assert.match(cikti, /41 araç yüklü/);
+    assert.match(cikti, /43 araç yüklü/);
   });
 });

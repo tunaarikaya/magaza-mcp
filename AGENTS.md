@@ -158,7 +158,7 @@ npx -y magaza-mcp kaydet --magazalar appstore,play --salt-okunur
 
 Bu modda yazma yapan araçlar (`appstore__yorum_yanitla`,
 `appstore__metin_guncelle`, fiyat/abonelik/yaş derecelendirme araçları, `appstore__hesap_duzelt`,
-Play yayın araçları, `play__yorum_yanitla`) listeye hiç girmez; 42 araç 28'e düşer. `magaza__cagir` listede kalır — katalogdaki okuma uçlarına da o
+Play yayın araçları, `play__yorum_yanitla`) listeye hiç girmez; 43 araç 28'e düşer. `magaza__cagir` listede kalır — katalogdaki okuma uçlarına da o
 araçtan gidiliyor — ama veri değiştiren bir operasyon istendiğinde reddeder.
 
 Komut mevcut ayarlara dokunmaz: yalnızca `magaza-mcp` girdisini ekler veya
@@ -227,10 +227,10 @@ npx magaza-mcp kur
 
 ### Yüklü araçlar günlük işi görür
 
-İki mağaza da açıkken 42 araç yüklenir: 20 tane `appstore__`, 16 tane `play__`,
+İki mağaza da açıkken 43 araç yüklenir: 21 tane `appstore__`, 16 tane `play__`,
 3 tane iki mağazayı birden sorgulayan `magaza__`, 3 tane de aşağıdaki erişim
 aracı. Tek mağazalı kurulumda çapraz araçlar hiç oluşmaz: yalnızca App Store'da
-23, yalnızca Play'de 19 araç yüklenir. Araç tanımlarının tamamı bağlamda
+24, yalnızca Play'de 19 araç yüklenir. Araç tanımlarının tamamı bağlamda
 yaklaşık **9.000 token** yer kaplar.
 
 Abonelik ve IAP fiyatı, abonelik kurulumu, satış ülkeleri ve yaş

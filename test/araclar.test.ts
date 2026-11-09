@@ -39,17 +39,17 @@ afterEach(() => {
 const adlar = (araclar: { ad: string }[]) => araclar.map((a) => a.ad);
 
 describe("araclariTopla", () => {
-  it("iki mağaza açıkken 41 araç yükler", () => {
-    assert.equal(ortamda("appstore,play").length, 41);
+  it("iki mağaza açıkken 43 araç yükler", () => {
+    assert.equal(ortamda("appstore,play").length, 43);
   });
 
   it("MAGAZALAR verilmezse iki mağaza da açıktır", () => {
-    assert.equal(ortamda(undefined).length, 41);
+    assert.equal(ortamda(undefined).length, 43);
   });
 
-  it("yalnızca App Store'da 22 araç yükler, hiç play__ aracı olmaz", () => {
+  it("yalnızca App Store'da 24 araç yükler, hiç play__ aracı olmaz", () => {
     const araclar = ortamda("appstore");
-    assert.equal(araclar.length, 22);
+    assert.equal(araclar.length, 24);
     assert.equal(adlar(araclar).filter((a) => a.startsWith("play__")).length, 0);
   });
 
@@ -71,7 +71,7 @@ describe("araclariTopla", () => {
 
   it("salt-okunur modda yazma araçları listeye hiç girmez", () => {
     const araclar = ortamda("appstore,play", true);
-    assert.equal(araclar.length, 27);
+    assert.equal(araclar.length, 28);
 
     for (const ad of [
       "appstore__yorum_yanitla",

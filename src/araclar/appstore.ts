@@ -7,6 +7,7 @@
  * magaza__endpoint_ara ve magaza__cagir üzerinden erişilir.
  */
 import { cagir, raporIndir, tumunuGetir } from "../istemci/apple.js";
+import { kurallariGetir } from "./kurallar.js";
 import type { Arac } from "./tip.js";
 
 export const metin = (aciklama: string) => ({ type: "string", description: aciklama });
@@ -663,6 +664,32 @@ export function appstoreAraclari(): Arac[] {
               ? `Toplam ${toplam} satırın ilk ${goster}'ü gösteriliyor.`
               : undefined,
         };
+      },
+    },
+
+    {
+      ad: "appstore__kurallar",
+      aciklama:
+        "Apple App Review Guidelines sayfasını CANLI çeker (developer.apple.com) " +
+        "— sabit bir kural listesi değil, her çağrıda tazeden okunur, böylece " +
+        "Apple kuralı değiştirdiğinde bayatlamaz. sorgu vermezsen sadece son " +
+        "kontrolden beri hangi kural id'lerinin metni değiştiğini (degisen_kurallar) " +
+        "söyler — düzenli aralıklarla çağırıp yeni bir guideline çıktı mı diye " +
+        "bakmak için. sorgu verirsen (kural numarası, örn. '4.2', veya anahtar " +
+        "kelime, örn. 'tracking', 'login', 'private api', 'payment') eşleşen " +
+        "kuralların güncel tam metnini döndürür; sonra ilgili uygulamanın kodunu " +
+        "kendin oku ve bu metne karşı değerlendir — statik bir kural motoru değil, " +
+        "güncel kaynak metni budur.",
+      girdiSemasi: {
+        type: "object",
+        properties: {
+          sorgu: metin(
+            "Kural numarası (örn. '2.3' tüm 2.3.x'leri de getirir) veya anahtar kelime. Boşsa yalnızca değişiklik özeti döner.",
+          ),
+        },
+      },
+      async calistir(girdi) {
+        return kurallariGetir(girdi.sorgu);
       },
     },
   ];
