@@ -927,6 +927,189 @@ export function appstoreYazmaAraclari(): Arac[] {
     },
 
     {
+      ad: "appstore__kalma_mesaji_kur",
+      aciklama:
+        "Abonelik iptaline başlayan kullanıcıya gösterilen kalma mesajını " +
+        "(retention message) kurar: mesaj kabı → sürüm → dil metinleri → " +
+        "verilen aboneliğe/aboneliklere atama. Başlık en fazla 66, gövde en " +
+        "fazla 144 karakter; fiyat/indirim/'%50' gibi ifadeler Apple incelemesinde " +
+        "reddedilir, sadece ne kaybedeceğini anlat. Görsel eklemek için önce " +
+        "Asset Library'de bir placement oluşturulmuş olmalı (appAssetLibraryPlacements; " +
+        "magaza__cagir ile), id'sini gorsel_placement_id'ye ver — yoksa metin-only " +
+        "gider. İndirim teklifi eklemek istersen appstore__abonelik_fiyat_ayarla'nın " +
+        "fiyat noktası mantığına benzer bir akış olan retentionOffers'ı " +
+        "magaza__endpoint_ara(\"retentionOffer\") ile bul, oluştur, sonra " +
+        "/v1/subscriptions/{id}/relationships/retentionMessageOffers'a ekle. " +
+        "Kurulan sürüm PREPARE_FOR_SUBMISSION durumunda kalır; App Review'a " +
+        "girmesi için App Store Connect'teki normal inceleme gönderimine " +
+        "(review submission) eklenmesi gerekir — bunu bu araç yapmaz, uygulamanın " +
+        "bir sonraki sürüm gönderimiyle birlikte elle eklenir.",
+      girdiSemasi: {
+        type: "object",
+        properties: {
+          uygulama_id: metin("appstore__uygulamalar'dan gelen id; mesaj bu uygulamaya bağlanır."),
+          abonelik_id: metin("Mesajın atanacağı tek abonelik id'si (appstore__abonelikler'den)."),
+          abonelik_idleri: {
+            type: "array",
+            items: { type: "string" },
+            description: "Aynı mesajı birden çok aboneliğe atamak için. abonelik_id ile birlikte de verilebilir.",
+          },
+          referans_adi: metin(
+            "App Store Connect'teki referans adı (en fazla 64 karakter). Kullanıcı bunu görmez.",
+          ),
+          yerellestirmeler: {
+            type: "array",
+            description: "Kullanıcının göreceği başlık ve gövde, dil başına. En az bir dil.",
+            items: {
+              type: "object",
+              properties: {
+                dil: metin("Örn. en-US, tr."),
+                baslik: metin("Başlık (en fazla 66 karakter). Fiyat/indirim/'ücretsiz' geçemez."),
+                govde: metin("Gövde metni (en fazla 144 karakter). Fiyat/indirim/'ücretsiz' geçemez."),
+              },
+              required: ["dil", "baslik", "govde"],
+            },
+          },
+          gorsel_placement_id: metin(
+            "Önceden oluşturulmuş bir appAssetLibraryPlacements id'si (opsiyonel). Verilmezse mesaj metin-only gider.",
+          ),
+          onayla: onaySemasi,
+        },
+        required: ["uygulama_id", "referans_adi", "yerellestirmeler"],
+      },
+      yazma: true,
+      async calistir(girdi) {
+        const aboneIdleri = [
+          ...(girdi.abonelik_id ? [kimlik(girdi.abonelik_id, "abonelik_id")] : []),
+          ...(Array.isArray(girdi.abonelik_idleri)
+            ? girdi.abonelik_idleri.map((a: unknown) => kimlik(a, "abonelik_idleri"))
+            : []),
+        ];
+        if (!aboneIdleri.length) throw new Error("abonelik_id ya da abonelik_idleri vermelisin.");
+
+        const referansAdi = String(girdi.referans_adi ?? "").trim();
+        if (!referansAdi || referansAdi.length > 64) {
+          throw new Error("referans_adi 1-64 karakter olmalı.");
+        }
+
+        const yerel: { dil: string; baslik: string; govde: string }[] = Array.isArray(girdi.yerellestirmeler)
+          ? girdi.yerellestirmeler
+          : [];
+        if (!yerel.length || yerel.some((y) => !y?.dil || !y?.baslik || !y?.govde)) {
+          throw new Error("yerellestirmeler en az bir {dil, baslik, govde} içermeli.");
+        }
+        for (const y of yerel) {
+          if (y.baslik.length > 66) throw new Error(`${y.dil}: baslik 66 karakteri geçiyor.`);
+          if (y.govde.length > 144) throw new Error(`${y.dil}: govde 144 karakteri geçiyor.`);
+        }
+
+        const gorselId = girdi.gorsel_placement_id ? kimlik(girdi.gorsel_placement_id, "gorsel_placement_id") : null;
+
+        if (girdi.onayla !== true) {
+          return onayIste(
+            "kalma mesajı kurulumu",
+            `${aboneIdleri.length} aboneliğe kalma mesajı atar. Sürüm PREPARE_FOR_SUBMISSION ` +
+              "durumunda kalır, App Review'a göndermek ayrı bir adım.",
+            {
+              adimlar: [
+                `mesaj kabı: ${referansAdi}`,
+                `sürüm: ${gorselId ? `görselli (${gorselId})` : "metin-only"}`,
+                `dil metinleri: ${yerel.map((y) => y.dil).join(", ")}`,
+                `atanacak abonelik(ler): ${aboneIdleri.join(", ")}`,
+              ],
+            },
+          );
+        }
+
+        const yapilan: Record<string, unknown> = {};
+        const adim = async <T>(ad: string, is: () => Promise<T>): Promise<T> => {
+          try {
+            return await is();
+          } catch (hata) {
+            throw new Error(
+              `Kurulum '${ad}' adımında durdu. Oluşturulanlar: ${JSON.stringify(yapilan)}\n` +
+                `${(hata as Error).message}`,
+            );
+          }
+        };
+
+        const mesaj: any = await adim("mesaj kabı", () =>
+          cagir({
+            yontem: "POST",
+            yol: "/v1/retentionMessages",
+            govde: {
+              data: {
+                type: "retentionMessages",
+                attributes: { referenceName: referansAdi },
+                relationships: { app: { data: { type: "apps", id: kimlik(girdi.uygulama_id, "uygulama_id") } } },
+              },
+            },
+          }),
+        );
+        const mesajId: string = mesaj.data.id;
+        yapilan.mesaj_id = mesajId;
+
+        const surum: any = await adim("sürüm", () =>
+          cagir({
+            yontem: "POST",
+            yol: "/v1/retentionMessageVersions",
+            govde: {
+              data: {
+                type: "retentionMessageVersions",
+                relationships: {
+                  retentionMessage: { data: { type: "retentionMessages", id: mesajId } },
+                  ...(gorselId
+                    ? { placement: { data: { type: "appAssetLibraryPlacements", id: gorselId } } }
+                    : {}),
+                },
+              },
+            },
+          }),
+        );
+        const surumId: string = surum.data.id;
+        yapilan.surum_id = surumId;
+
+        for (const y of yerel) {
+          await adim(`dil metni (${y.dil})`, () =>
+            cagir({
+              yontem: "POST",
+              yol: "/v1/retentionMessageLocalizations",
+              govde: {
+                data: {
+                  type: "retentionMessageLocalizations",
+                  attributes: { locale: y.dil, header: y.baslik, body: y.govde },
+                  relationships: {
+                    retentionMessageVersion: { data: { type: "retentionMessageVersions", id: surumId } },
+                  },
+                },
+              },
+            }),
+          );
+        }
+        yapilan.diller = yerel.map((y) => y.dil);
+
+        for (const aboneId of aboneIdleri) {
+          await adim(`atama (${aboneId})`, () =>
+            cagir({
+              yontem: "PATCH",
+              yol: `/v1/subscriptions/${parca(aboneId, "abonelik id")}/relationships/retentionMessage`,
+              govde: { data: { type: "retentionMessages", id: mesajId } },
+            }),
+          );
+        }
+        yapilan.atanan_abonelikler = aboneIdleri;
+
+        return {
+          basarili: true,
+          ...yapilan,
+          not: "Sürüm PREPARE_FOR_SUBMISSION durumunda. App Review'a girmesi için bir " +
+            "review submission'a eklenmesi gerekiyor (App Store Connect üzerinden elle, " +
+            "veya magaza__cagir ile POST /v1/reviewSubmissionItems).",
+        };
+      },
+    },
+
+    {
       ad: "appstore__yas_derecelendirme",
       aciklama:
         "Uygulamanın yaş derecelendirme anketini okur veya doldurur. cevaplar " +

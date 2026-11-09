@@ -409,7 +409,7 @@ These tools only load when both stores are connected.
 </details>
 
 <details>
-<summary><b>App Store Connect — 19 tools</b> (<code>appstore__</code>)</summary>
+<summary><b>App Store Connect — 20 tools</b> (<code>appstore__</code>)</summary>
 
 <br>
 
@@ -431,6 +431,7 @@ These tools only load when both stores are connected.
 | `appstore__iap_fiyat_ayarla` ✎ | Sets a one-time purchase's price from a single base country; Apple fills in the rest. |
 | `appstore__abonelik_ulkeleri` ✎ | Makes a subscription available in every country (or the ones you list) in one request. |
 | `appstore__abonelik_kur` ✎ | Creates a subscription from scratch behind one approval: group → subscription → localized names → availability → prices in all countries. |
+| `appstore__kalma_mesaji_kur` ✎ | Sets up a retention message shown when a subscriber starts to cancel: message → version → localized header/body → assigned to the subscription(s), behind one approval. Images/offers are optional add-ons via `magaza__cagir`; submitting the version for App Review is a separate manual step. |
 | `appstore__yas_derecelendirme` ✎ | Reads or fills in the age rating questionnaire (Apple's 2025 questions). Finds the editable app info by itself; only the answers you give change. |
 | `appstore__hesap_sagligi` | Scans the whole developer account for termination, removal and long-review risk: a 0–100 score, findings tied to Apple guidelines, why each one is risky and how to fix it. See [Account health](#-account-health). |
 | `appstore__hesap_duzelt` ✎ | Fixes findings from `hesap_sagligi` by id: shows current → new first, applies with `onayla=true`. Never creates a version, removes an app or changes roles. |
